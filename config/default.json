@@ -1,0 +1,20 @@
+{
+  "serial": {
+    "device": "/dev/ttyACM0",
+    "baud": 460800
+  },
+  "websocket": {
+    "port": 3001
+  },
+  "ntrip": {
+    "enable": false,
+    "host": "rtk2go.com",
+    "port": 2101,
+    "mountpoint": "",
+    "password": ""
+  },
+  "tcpRepeater": {
+    "enable": true,
+    "port": 2001
+  }
+}

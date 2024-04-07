@@ -1,4 +1,5 @@
 // https://www.youtube.com/watch?v=i7OWJwsU_WA -- tutorial on express/react app setup
+import { version } from '../../package.json';
 import os from 'os';
 import config from 'config';
 import fs from 'fs';
@@ -11,6 +12,8 @@ import cors from 'cors';
 import TransparentTcpLink from './transparent-tcp-link';
 import NtripTransport from './ntrip-transport';
 import uBloxSerial from './ublox-serial';
+
+console.log(`\nFixed Base Server v${version}\n`);
 
 const eth0Interface = os.networkInterfaces().eth0;
 const wlan0Interface = os.networkInterfaces().wlan0;
@@ -204,12 +207,12 @@ process.on('SIGINT', async () => {
     }
 });
 
-// TODO: make sure this works for production build (define PORT, for example)
 if (!process.env['VITE']) {
     const frontendFiles = process.cwd() + '/dist';
     app.use(express.static(frontendFiles));
     app.get('/*', (_, res) => {
         res.send(frontendFiles + '/index.html');
     });
-    app.listen(process.env['PORT']);
+    app.listen(configObject.webserver.port);
+    console.log(`Express web server started on     *:${configObject.webserver.port}`);
 }

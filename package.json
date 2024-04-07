@@ -1,7 +1,7 @@
 {
   "name": "pi-base",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -21,7 +21,7 @@
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
-    "better-port": "^1.0.1",
+    "better-port": "^1.0.2",
     "chartjs-plugin-annotation": "^3.0.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",

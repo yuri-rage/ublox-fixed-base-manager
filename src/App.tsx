@@ -18,6 +18,7 @@ import UtilitiesCard from './utilities-card';
 import SvinControlCard from './ubx-svin-control-card';
 import NmeaConsoleCard, { showNmeaConsole } from './nmea-console-card';
 
+// TODO: add an 'about' card with version info, doc links, etc.
 // TODO: potentially await ACK for each write that requires one (and notify on failure)
 
 export default function App() {

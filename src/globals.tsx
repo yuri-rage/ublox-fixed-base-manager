@@ -31,6 +31,9 @@ export const appConfig = signal({
         device: '',
         baud: 0,
     },
+    webserver: {
+        port: 0,
+    },
     websocket: {
         port: 0,
     },

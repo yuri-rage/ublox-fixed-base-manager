@@ -3,6 +3,9 @@
     "device": "/dev/ttyACM0",
     "baud": 460800
   },
+  "webserver": {
+    "port": 8080
+  },
   "websocket": {
     "port": 3001
   },

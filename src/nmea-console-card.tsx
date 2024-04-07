@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { nmeaMessages, nmeaMsgCount } from './globals';
-import { computed, useComputed, useSignal, useSignalEffect } from '@preact/signals-react';
+import { computed, useSignal, useSignalEffect } from '@preact/signals-react';
 import { useRef } from 'react';
 import { Checkbox } from './components/ui/checkbox';
 import { Label } from './components/ui/label';

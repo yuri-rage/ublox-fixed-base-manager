@@ -2,8 +2,6 @@ import net from 'net';
 
 type DataCallback = (data: any) => void;
 
-// TODO: use this as a template for a serial class (that checks for ubx and rtcm3 before forwarding)
-
 export default class TransparentTcpLink {
     private server: net.Server | null = null;
     private clients: net.Socket[] = [];

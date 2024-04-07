@@ -16,5 +16,11 @@
   "tcpRepeater": {
     "enable": true,
     "port": 2001
+  },
+  "savedLocation": {
+    "ecefXOrLat": 0,
+    "ecefYOrLon": 0,
+    "ecefZOrAlt": 0,
+    "fixedPosAcc": 0
   }
 }

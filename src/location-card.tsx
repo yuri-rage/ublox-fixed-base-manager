@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ubx, location } from './globals';
+import CoordinateTranslator from './lib/coordinate-translator';
 
 function getSatCount() {
     const gnssSvPairsSet = new Set<string>();
@@ -10,23 +11,15 @@ function getSatCount() {
     return gnssSvPairsSet.size;
 }
 
-function getGoogleMapsLink(lat: number, lon: number) {
-    const absLat = Math.abs(lat);
-    const absLon = Math.abs(lon);
-    let latDeg = Math.floor(absLat);
-    const latMin = Math.floor((absLat - latDeg) * 60);
-    const latSec = ((absLat - latDeg - latMin / 60) * 3600).toFixed(1);
-    let lonDeg = Math.floor(absLon);
-    const lonMin = Math.floor((absLon - lonDeg) * 60);
-    const lonSec = ((absLon - lonDeg - lonMin / 60) * 3600).toFixed(1);
+function getGoogleMapsLink(t: CoordinateTranslator) {
+    const [lat, lon] = t.lla;
+    const [latD, latM, latS] = t.latDMS;
+    const [lonD, lonM, lonS] = t.lngDMS;
 
-    latDeg = latDeg * (lat < 0 ? -1 : 1);
-    lonDeg = lonDeg * (lon < 0 ? -1 : 1);
+    const latHemi = latD < 0 ? 'S' : 'N';
+    const lonHemi = lonD < 0 ? 'W' : 'E';
 
-    const latHemi = lat < 0 ? 'S' : 'N';
-    const lonHemi = lon < 0 ? 'W' : 'E';
-
-    https: return `https://www.google.com/maps/place/${Math.abs(latDeg)}%C2%B0${latMin}'${latSec}%22${latHemi}+${Math.abs(lonDeg)}%C2%B0${lonMin}'${lonSec}%22${lonHemi}/@${lat.toFixed(7)},${lon.toFixed(7)},17z/`;
+    return `https://www.google.com/maps/place/${Math.abs(latD)}%C2%B0${latM}'${latS.toFixed(1)}%22${latHemi}+${Math.abs(lonD)}%C2%B0${lonM}'${lonS.toFixed(1)}%22${lonHemi}/@${lat.toFixed(7)},${lon.toFixed(7)},17z/`;
 }
 
 export default function LocationCard() {
@@ -39,13 +32,13 @@ export default function LocationCard() {
                 </CardDescription>
             </CardHeader>
             <CardContent className="px-4 pb-2">
-                <pre>{location.value[0]}</pre>
-                <pre>{location.value[1]}</pre>
-                <pre>{`${location.value[3]}' (${location.value[2]}m)`}</pre>
+                <pre>{location.value.latString}</pre>
+                <pre>{location.value.lngString}</pre>
+                <pre>{`${location.value.altFeet.toFixed(1)}' (${location.value.alt.toFixed(2)}m)`}</pre>
             </CardContent>
             <CardContent className="px-4 pb-2">
                 <a
-                    href={getGoogleMapsLink(location.value[0], location.value[1])}
+                    href={getGoogleMapsLink(location.value)}
                     target="_blank"
                     rel="noreferrer"
                     className="text-sm text-blue-400 hover:underline"

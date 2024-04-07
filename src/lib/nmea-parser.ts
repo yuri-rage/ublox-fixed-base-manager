@@ -3,6 +3,7 @@ import { EventEmitter } from 'eventemitter3';
 export class NmeaParser extends EventEmitter {
     private _messages = new Map();
     private _count = 0;
+    private _encoder = new TextEncoder();
 
     public isNmea(data: Uint8Array | string): boolean {
         if (data.length < 8) {
@@ -65,7 +66,7 @@ export class NmeaParser extends EventEmitter {
 
         buffer.copyWithin(0, msgLength);
         this.emit('update', this._count);
-        this.emit('message', message);
+        this.emit('message', this._encoder.encode(message));
         return length - msgLength;
     }
 

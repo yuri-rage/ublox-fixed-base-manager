@@ -16,12 +16,12 @@ import ConnectionCard from './connection-card';
 import UartCard from './uart-card';
 import UtilitiesCard from './utilities-card';
 import SvinControlCard from './ubx-svin-control-card';
+import NmeaConsoleCard, { showNmeaConsole } from './nmea-console-card';
 
-// TODO: text input for self-surveyed coordinates
-// TODO: await ACK and toast on success/failure of commands
+// TODO: potentially await ACK for each write that requires one (and notify on failure)
 
 export default function App() {
-    const activeTab = useSignal('svin'); // TODO: revert this to 'stats'
+    const activeTab = useSignal('stats');
 
     function handleTabChange(value: string) {
         activeTab.value = value;
@@ -55,10 +55,15 @@ export default function App() {
                             <TabsTrigger value="utilities">Utilities</TabsTrigger>
                         </TabsList>
                         <TabsContent value="stats">
-                            <div className="flex flex-wrap gap-3">
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_auto_auto_1fr]">
                                 <VersionCard />
                                 <UbxMsgCard />
                                 <RtcmMsgCard />
+                                {showNmeaConsole.value && (
+                                    <div className="md:col-start-1 md:col-end-4">
+                                        <NmeaConsoleCard />
+                                    </div>
+                                )}
                             </div>
                         </TabsContent>
                         <TabsContent value="svin">

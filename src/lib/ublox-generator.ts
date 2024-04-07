@@ -147,6 +147,26 @@ export class uBloxGenerator {
         return generateMessage(UBX.CFG.CLASS, UBX.CFG.TMODE3, payload);
     }
 
+    public configFixedModeLLA(lat: number, lng: number, alt: number, fixedPosAcc: number) {
+        const payload = new Uint8Array(40);
+        const iLat = Math.trunc(lat * 1e7);
+        const iLng = Math.trunc(lng * 1e7);
+        const iAlt = Math.trunc(alt * 1e2);
+        const latHP = Math.trunc((lat - iLat * 1e-7) * 1e9);
+        const lngHP = Math.trunc((lng - iLng * 1e-7) * 1e9);
+        const altHP = Math.trunc((alt - iAlt * 1e-2) * 1e4);
+        payload[2] = 0x02; // Fixed mode
+        payload[3] = 0x01; // LLA 
+        payload.set(packInt32(iLat), 4);
+        payload.set(packInt32(iLng), 8);
+        payload.set(packInt32(iAlt), 12);
+        payload[16] = latHP;
+        payload[17] = lngHP;
+        payload[18] = altHP;
+        payload.set(packUint32(Math.trunc(fixedPosAcc * 1e4)), 20);
+        return generateMessage(UBX.CFG.CLASS, UBX.CFG.TMODE3, payload);
+    }
+
     public configMsgRate(
         msgClass: number,
         msgId: number,

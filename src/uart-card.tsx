@@ -257,7 +257,6 @@ export default function UartCard() {
             ubx.write(ubx.generate.turnOff(NMEA.STANDARD.CLASS, msgId));
         }
 
-        // TODO: add UBX-NAV-SAT at 1 Hz
         ubx.write(
             ubx.generate.configMsgRate(
                 UBX.NAV.CLASS,

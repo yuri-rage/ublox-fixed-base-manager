@@ -62,6 +62,7 @@ function connectSerialPort(path: string, baud: number) {
     };
 
     const onUbxMsg = (data: Uint8Array) => {
+        
         if (connectedSockets.size > 0) {
             io.emit('data', data);
         }
@@ -74,7 +75,8 @@ function connectSerialPort(path: string, baud: number) {
     };
 
     const onNmeaMsg = (data: Uint8Array) => {
-        tcpRepeater.write(data); // no need to forward to websocket or ntrip
+        onUbxMsg(data);
+        // no need to forward to ntrip
     };
 
     ubxSerial.create(path, baud, onConnect, onDisconnect, onUbxMsg, onRtcm3Msg, onNmeaMsg);

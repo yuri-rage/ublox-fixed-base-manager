@@ -1,0 +1,10 @@
+[Unit]
+Description=Fixed Base Configurator
+
+[Service]
+ExecStart=/usr/bin/node /home/{{USERNAME}}/rtkbase/server.cjs
+WorkingDirectory=/home/{{USERNAME}}/rtkbase
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

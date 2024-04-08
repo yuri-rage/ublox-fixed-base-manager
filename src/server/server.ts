@@ -4,16 +4,29 @@ import os from 'os';
 import config from 'config';
 import fs from 'fs';
 import express from 'express';
-export const app = express();
 import http from 'http';
-const server = http.createServer(app);
 import { Server } from 'socket.io';
 import cors from 'cors';
-import TransparentTcpLink from './transparent-tcp-link';
-import NtripTransport from './ntrip-transport';
-import uBloxSerial from './ublox-serial';
+import { TransparentTcpLink } from './transparent-tcp-link';
+import { NtripTransport } from './ntrip-transport';
+import { uBloxSerial } from './ublox-serial';
+import { exec } from 'child_process';
+import { StreamLogger } from './stream-logger';
+
+const serverStartTime = new Date();
+const osBootTime = new Date(serverStartTime.getTime() - os.uptime() * 1000);
 
 console.log(`\nFixed Base Server v${version}\n`);
+
+const LOG_DIR = './logs';
+const LOG_IN_PREFIX = 'EXTERN-IN';
+const LOG_RTCM3_OUT_PREFIX = 'RTCM3-OUT';
+const LOG_UBX_OUT_PREFIX = 'UBX-OUT--';
+const LOG_UBX_OUT_EXTENSION = 'ubx';
+const NTRIP_BOOT_DELAY = 10000; // 10 seconds to allow network services to start
+
+export const app = express();
+const server = http.createServer(app);
 
 const eth0Interface = os.networkInterfaces().eth0;
 const wlan0Interface = os.networkInterfaces().wlan0;
@@ -26,6 +39,9 @@ let configObject = config.util.toObject(); // mutable in case of config updates
 const ubxSerial = new uBloxSerial();
 const tcpRepeater = new TransparentTcpLink();
 const ntrip = new NtripTransport();
+const externInLog = new StreamLogger();
+const rtcm3OutLog = new StreamLogger();
+const ubxOutLog = new StreamLogger();
 
 const io = new Server(server, {
     cors: {
@@ -53,35 +69,59 @@ app.use(cors());
 
 const connectedSockets = new Set(); // keep track of connected sockets
 
-function connectSerialPort(path: string, baud: number) {
+async function connectSerialPort(path: string, baud: number) {
     const onConnect = () => {
-        console.log(`${ubxSerial.path} opened`);
+        console.log(`Opened serial port              ${ubxSerial.path}`);
+
         io.emit('portConnected', ubxSerial.path);
+        
+        if (configObject.ntrip.enable) {
+            ntrip.connect(
+                configObject.ntrip.host,
+                configObject.ntrip.port,
+                configObject.ntrip.mountpoint,
+                configObject.ntrip.password,
+                NTRIP_BOOT_DELAY,
+            );
+        }
     };
 
     const onDisconnect = () => {
-        console.log(`${ubxSerial.path} closed`);
+        console.log(`Serial port closed`);
         io.emit('portDisconnected', ubxSerial.path);
+        ntrip.close();
     };
 
     const onUbxMsg = (data: Uint8Array) => {
-        
         if (connectedSockets.size > 0) {
             io.emit('data', data);
         }
         tcpRepeater.write(data);
+        ubxOutLog.write(data);
     };
 
     const onRtcm3Msg = (data: Uint8Array) => {
-        onUbxMsg(data); // forward to websocket and tcpRepeater
+        if (connectedSockets.size > 0) {
+            io.emit('data', data);
+        }
+        tcpRepeater.write(data);
         ntrip.write(data);
+        rtcm3OutLog.write(data);
     };
 
     const onNmeaMsg = (data: Uint8Array) => {
-        onUbxMsg(data);
+        if (connectedSockets.size > 0) {
+            io.emit('data', data);
+        }
+        tcpRepeater.write(data);
         // no need to forward to ntrip
     };
 
+    const ports = await ubxSerial.portList();
+    if (!ports.find((port) => port.path === path)) {
+        console.error(`Serial port does not exist      ${path}`);
+        return;
+    }
     ubxSerial.create(path, baud, onConnect, onDisconnect, onUbxMsg, onRtcm3Msg, onNmeaMsg);
 }
 
@@ -91,6 +131,7 @@ function connectTcpRepeater(port: number) {
     }
     tcpRepeater.create(port, (data) => {
         ubxSerial.write(data);
+        externInLog.write(data);
     });
 }
 
@@ -110,7 +151,8 @@ io.on('connect', (socket) => {
     const updateConfig = (newConfig: any) => {
         if (
             newConfig.serial.device !== configObject.serial.device ||
-            newConfig.serial.baud !== configObject.serial.baud
+            newConfig.serial.baud !== configObject.serial.baud ||
+            !ubxSerial.isConnected
         ) {
             connectSerialPort(newConfig.serial.device, newConfig.serial.baud);
         }
@@ -133,12 +175,13 @@ io.on('connect', (socket) => {
             newConfig.ntrip.mountPoint !== configObject.ntrip.mountPoint ||
             newConfig.ntrip.password !== configObject.ntrip.password
         ) {
-            if (newConfig.ntrip.enable) {
+            if (newConfig.ntrip.enable && ubxSerial.isConnected) {
                 ntrip.connect(
                     newConfig.ntrip.host,
                     newConfig.ntrip.port,
                     newConfig.ntrip.mountpoint,
                     newConfig.ntrip.password,
+                    0,
                 );
             } else {
                 ntrip.close();
@@ -154,10 +197,49 @@ io.on('connect', (socket) => {
         ubxSerial.write(data);
     };
 
+    const handleShutdown = () => {
+        exec('sudo shutdown now');
+    };
+
+    const handleReboot = () => {
+        exec('sudo reboot');
+    };
+
+    const handleGetLogStatus = () => {
+        socket.emit('logStatus', externInLog.isOpen || rtcm3OutLog.isOpen);
+    };
+
+    const handleSetLogStatus = (data: boolean) => {
+        if (data) {
+            externInLog.open(LOG_DIR, LOG_IN_PREFIX);
+            rtcm3OutLog.open(LOG_DIR, LOG_RTCM3_OUT_PREFIX);
+            ubxOutLog.open(LOG_DIR, LOG_UBX_OUT_PREFIX, LOG_UBX_OUT_EXTENSION);
+            return;
+        }
+        externInLog.close();
+        rtcm3OutLog.close();
+        ubxOutLog.close();
+    };
+
+    const handleGetStartTime = () => {
+        socket.emit('startTime', {
+            os: osBootTime,
+            server: serverStartTime,
+            tcpRepeater: tcpRepeater.startTime,
+            ntrip: ntrip.startTime,
+            logger: ubxOutLog.startTime,
+        });
+    };
+
     socket.on('getConfig', getConfig);
     socket.on('getPorts', getPorts);
     socket.on('config', updateConfig);
     socket.on('write', handleWrite);
+    socket.on('shutdown', handleShutdown);
+    socket.on('reboot', handleReboot);
+    socket.on('getLogStatus', handleGetLogStatus);
+    socket.on('setLogStatus', handleSetLogStatus);
+    socket.on('getStartTime', handleGetStartTime);
 
     socket.on('disconnect', () => {
         connectedSockets.delete(socket.id);
@@ -172,17 +254,8 @@ if (configObject.tcpRepeater.enable) {
     connectTcpRepeater(configObject.tcpRepeater.port);
 }
 
-if (configObject.ntrip.enable) {
-    ntrip.connect(
-        configObject.ntrip.host,
-        configObject.ntrip.port,
-        configObject.ntrip.mountpoint,
-        configObject.ntrip.password,
-    );
-}
-
 server.listen(configObject.websocket.port, () => {
-    console.log(`Websocket server listening on     *:${configObject.websocket.port}`);
+    console.log(`Websocket server started on     *:${configObject.websocket.port}`);
 });
 
 // handle SIGINT (Ctrl+C)
@@ -214,5 +287,5 @@ if (!process.env['VITE']) {
         res.send(frontendFiles + '/index.html');
     });
     app.listen(configObject.webserver.port);
-    console.log(`Express web server started on     *:${configObject.webserver.port}`);
+    console.log(`Express web server started on   *:${configObject.webserver.port}`);
 }

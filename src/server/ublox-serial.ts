@@ -1,11 +1,11 @@
 import { BetterPortEvent, BetterSerialPort } from 'better-port';
 import { SerialPort } from 'serialport';
-import uBloxGps from '@/lib/ublox-gps';
+import { uBloxGps } from '@/core/ublox-gps';
 
 type DataCallback = (data: any) => void;
 type GenericCallback = () => void;
 
-export default class uBloxSerial {
+export class uBloxSerial {
     private serialPort: BetterSerialPort | null = null;
     private ubx = new uBloxGps();
 
@@ -17,6 +17,10 @@ export default class uBloxSerial {
 
     public get path() {
         return this.serialPort ? this.serialPort.path : '';
+    }
+
+    public get isConnected() {
+        return this.serialPort ? this.serialPort.portOpen() : false;
     }
 
     public portList = async () => {
@@ -31,7 +35,7 @@ export default class uBloxSerial {
         onDisconnect: GenericCallback,
         onUbxMsg: DataCallback,
         onRtcm3Msg: DataCallback,
-        onNmeaMsg: DataCallback
+        onNmeaMsg: DataCallback,
     ) {
         if (this.serialPort && this.serialPort.portOpen()) {
             this.serialPort.closePort();
@@ -64,7 +68,7 @@ export default class uBloxSerial {
     }
 
     public write(data: any) {
-        this.ubx.write(data); // validates as UBX or RTCM3 and emits a 'write' event
+        this.ubx.write(data); // validates checksum(s) and emits a 'write' event
     }
 
     public close() {

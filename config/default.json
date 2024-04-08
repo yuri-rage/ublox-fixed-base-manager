@@ -25,5 +25,23 @@
     "ecefYOrLon": 0,
     "ecefZOrAlt": 0,
     "fixedPosAcc": 0
+  },
+  "advanced": {
+    "useMSM7": false,
+    "rate1005": {
+      "usb": 5,
+      "uart1": 5,
+      "uart2": 5
+    },
+    "rate1230": {
+      "usb": 5,
+      "uart1": 5,
+      "uart2": 5
+    },
+    "enableUbxNavSat": {
+      "usb": true,
+      "uart1": false,
+      "uart2": false
+    }
   }
 }

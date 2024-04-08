@@ -1,32 +1,31 @@
-import { ThemeProvider } from '@/components/theme-provider';
+import { useSignal } from '@preact/signals-react';
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { Toaster } from '@/components/ui/sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ConnectionCard } from '@/components/ConnectionCard';
+import { FixedBaseStatusCard } from '@/components/FixedBaseStatusCard';
+import { NetworkServicesCard } from '@/components/NetworkServicesCard';
+import { NmeaConsoleCard } from '@/components/NmeaConsoleCard';
+import { Rtcm3MsgCard } from '@/components/Rtcm3MsgCard';
+import { SnrChart } from '@/components/SnrChart';
+import { SvinCard } from '@/components/SvinCard';
+import { SvinControlCard } from './components/SvinControlCard';
+import { Tmode3Card } from '@/components/Tmode3Card';
+import { UartCard } from '@/components/UartCard';
+import { UbxMsgCard } from '@/components/UbxMsgCard';
+import { UbxVersionCard } from '@/components/UbxVersionCard';
+import { UtilitiesCard } from '@/components/UtilitiesCard';
+import { showNmeaConsole } from '@/components/NmeaConsoleCard';
 
-import { Toaster } from '@/components/ui/sonner';
-import SnrChart from './snr-chart';
-import VersionCard from './ubx-version-card';
-import UbxMsgCard from './ubx-msg-card';
-import RtcmMsgCard from './rtcm-msg-card';
-import SvinCard from './ubx-svin-card';
-import Tmode3Card from './ubx-tmode3-card';
-import NetworkServicesCard from './net-services-card';
-import LocationCard from './location-card';
-import { useSignal } from '@preact/signals-react';
-import ConnectionCard from './connection-card';
-import UartCard from './uart-card';
-import UtilitiesCard from './utilities-card';
-import SvinControlCard from './ubx-svin-control-card';
-import NmeaConsoleCard, { showNmeaConsole } from './nmea-console-card';
-
-// TODO: add an 'about' card with version info, doc links, etc.
 // TODO: potentially await ACK for each write that requires one (and notify on failure)
 
-export default function App() {
+export const App = () => {
     const activeTab = useSignal('stats');
 
-    function handleTabChange(value: string) {
+    const handleTabChange = (value: string) => {
         activeTab.value = value;
-    }
+    };
 
     return (
         <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -35,11 +34,11 @@ export default function App() {
             </div>
             <div className="px-3">
                 <Card>
-                    <CardContent className="flex flex-row gap-3 p-3">
-                        <div className="flex-none">
-                            <LocationCard />
+                    <CardContent className="flex flex-col gap-3 p-3 sm:flex-row">
+                        <div className="flex-none space-y-3">
+                            <FixedBaseStatusCard />
                         </div>
-                        <div className="flex-grow">
+                        <div className="flex-grow overflow-hidden rounded-xl border p-2">
                             <SnrChart />
                         </div>
                     </CardContent>
@@ -57,9 +56,9 @@ export default function App() {
                         </TabsList>
                         <TabsContent value="stats">
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-[auto_auto_auto_1fr]">
-                                <VersionCard />
+                                <UbxVersionCard />
                                 <UbxMsgCard />
-                                <RtcmMsgCard />
+                                <Rtcm3MsgCard />
                                 {showNmeaConsole.value && (
                                     <div className="md:col-start-1 md:col-end-4">
                                         <NmeaConsoleCard />
@@ -93,4 +92,4 @@ export default function App() {
             <Toaster />
         </ThemeProvider>
     );
-}
+};

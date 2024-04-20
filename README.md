@@ -76,6 +76,21 @@ dtoverlay=disable-WiFi
 ```
 
 ---
+### RENOGY SOLAR CHARGE CONTROLLER
+
+The app supports additional features when a Renogy solar charge controller is in use, including safe shutdown on low voltage.
+
+The [Renogy Wanderer (10A)](https://www.amazon.com/gp/product/B07NPDWZJ7/) is fully supported. Other Renogy models should work but remain untested.
+
+An [RS232 to USB converter](https://www.amazon.com/gp/product/B003WOWBBW/) is required for Renogy data to be available in the app.
+
+The app uses a foundation inspired by the [NodeRenogy](https://github.com/sophienyaa/NodeRenogy) project, and additional information can be found on its landing page.
+
+The RS232 adapter pinout provided by [NodeRenogy](https://github.com/sophienyaa/NodeRenogy) is slightly confusing. A  modified reference image is provided below for clarity.
+
+![RS232 Pinout](rs232_pinout.png)
+
+---
 ### REFINING FIXED BASE SURVEY LOCATION
 #### (AND GNSS DATA POST-PROCESSING/PPK)
 
@@ -158,6 +173,13 @@ The project is a Vite managed React frontend and makes heavy use of Preact signa
 Vite also handles running the ExpressJS backend during development (via `npm run dev`), and the `build-release.sh` script packages everything for production (which might be a bit hacky, but it's working well).
 
 I am no seasoned web developer, as you'll likely find if you read through the source. As such, I may not always be well-equipped to handle complex pull requests. However, I'm open to suggestion, and I will endeavor to merge features and bug fixes that are well formed (and/or well explained).
+
+---
+### ACKNOWLEDGEMENTS
+
+Thanks to @lakowske for the [ecef-projector](https://github.com/lakowske/ecef-projector) codebase. I refactored it slightly to make use of more modern JS and TS constructs, but the algorithms and math are unchanged.
+
+Thanks also to @sophienyaa for the [NodeRenogy](https://github.com/sophienyaa/NodeRenogy) project. I used `renogy.js` as the basis for my implementation of the solar charge controller feature.
 
 ---
 ### LICENSE (MIT)

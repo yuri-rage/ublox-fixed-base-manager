@@ -26,6 +26,11 @@
     "ecefZOrAlt": 0,
     "fixedPosAcc": 0
   },
+  "renogySolar": {
+    "enable": false,
+    "port": "/dev/ttyUSB0",
+    "lowVoltageCutoff": 11.2
+  },
   "advanced": {
     "useMSM7": false,
     "rate1005": {

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConnectionCard } from '@/components/ConnectionCard';
 import { FixedBaseStatusCard } from '@/components/FixedBaseStatusCard';
-import { NetworkServicesCard } from '@/components/NetworkServicesCard';
+import { ServicesCard } from '@/components/ServicesCard';
 import { NmeaConsoleCard } from '@/components/NmeaConsoleCard';
 import { Rtcm3MsgCard } from '@/components/Rtcm3MsgCard';
 import { SnrChart } from '@/components/SnrChart';
@@ -17,11 +17,13 @@ import { UbxMsgCard } from '@/components/UbxMsgCard';
 import { UbxVersionCard } from '@/components/UbxVersionCard';
 import { UtilitiesCard } from '@/components/UtilitiesCard';
 import { showNmeaConsole } from '@/components/NmeaConsoleCard';
+import { RenogyDataCard } from './components/RenogyDataCard';
+import { appConfig } from './globals';
 
 // TODO: potentially await ACK for each write that requires one (and notify on failure)
 
 export const App = () => {
-    const activeTab = useSignal('stats');
+    const activeTab = useSignal("stats");
 
     const handleTabChange = (value: string) => {
         activeTab.value = value;
@@ -49,9 +51,12 @@ export const App = () => {
                     <Tabs value={activeTab.value} onValueChange={handleTabChange} className="p-3">
                         <TabsList>
                             <TabsTrigger value="stats">u-Blox Statistics</TabsTrigger>
+                            {appConfig.value.renogySolar.enable && (
+                                <TabsTrigger value="renogy">Solar Charger</TabsTrigger>
+                            )}
                             <TabsTrigger value="svin">Location/Survey Status</TabsTrigger>
                             <TabsTrigger value="uart">UART Config</TabsTrigger>
-                            <TabsTrigger value="network">Network Services</TabsTrigger>
+                            <TabsTrigger value="services">Services</TabsTrigger>
                             <TabsTrigger value="utilities">Utilities</TabsTrigger>
                         </TabsList>
                         <TabsContent value="stats">
@@ -78,13 +83,16 @@ export const App = () => {
                                 <UartCard />
                             </div>
                         </TabsContent>
-                        <TabsContent value="network">
+                        <TabsContent value="services">
                             <div className="flex flex-wrap gap-3">
-                                <NetworkServicesCard />
+                                <ServicesCard />
                             </div>
                         </TabsContent>
                         <TabsContent value="utilities">
                             <UtilitiesCard />
+                        </TabsContent>
+                        <TabsContent value="renogy">
+                            <RenogyDataCard />
                         </TabsContent>
                     </Tabs>
                 </Card>

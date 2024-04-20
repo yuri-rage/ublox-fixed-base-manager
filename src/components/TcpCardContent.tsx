@@ -14,7 +14,7 @@ export const TcpCardContent = () => {
         sendConfig();
     };
     return (
-        <CardContent className="flex flex-col px-5 pb-4">
+        <CardContent className="flex flex-col pt-4 px-5 pb-4">
             <TooltipContainer tooltipText="Allows local network (TCP) connection to u-Center, Mission Planner, etc.">
                 <div className="flex items-center justify-start space-x-2">
                     <Label>Local Network Repeater</Label>

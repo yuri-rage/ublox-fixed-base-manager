@@ -4,6 +4,7 @@ import { setProperty } from 'dot-prop';
 import { uBloxGps } from '@/core/ublox-gps';
 import { UBX } from '@/core/ublox-interface';
 import { CoordinateTranslator } from '@/core/coordinate-translator';
+import { RenogyData } from '@/core/renogy-data';
 
 const originRoot = window.location.origin.split(':').slice(0, 2).join(':');
 
@@ -16,6 +17,7 @@ export const MIN_SVIN_TIME = 60; // default to 1 min svin time
 // u-Blox GPS handling
 export const socket = io(`${originRoot}:3001`);
 export const ubx = new uBloxGps();
+export const renogy = new RenogyData();
 
 // signals
 export const rtcm3Count = signal(0);
@@ -29,6 +31,7 @@ export const ubxMonVerCount = signal(0);
 export const ubxNavPvtCount = signal(0);
 export const ubxNavSvinCount = signal(0);
 export const ubxRxmRawxCount = signal(0);
+export const renogyUpdateCount = signal(0);
 export const loggingStatus = signal(false);
 
 export type ServiceStartTimes = {
@@ -54,6 +57,7 @@ export const appConfig = signal({
     ntrip: { enable: false, host: '', port: 0, mountpoint: '', password: '' },
     tcpRepeater: { enable: false, port: 0 },
     savedLocation: { ecefXOrLat: 0, ecefYOrLon: 0, ecefZOrAlt: 0, fixedPosAcc: 0 },
+    renogySolar: { enable: false, port: '', lowVoltageCutoff: 0 },
     advanced: {
         useMSM7: false,
         rate1005: { usb: 0, uart1: 0, uart2: 0 },
@@ -160,12 +164,23 @@ effect(() => {
         connectedPort.value = port;
     }
 
+    function onRenogyData(raw: number[]) {
+        renogy.rawData = raw;
+    }
+
+    function onRenogyInfo(raw: number[]) {
+        renogy.rawControllerInfo = raw;
+        renogyUpdateCount.value++;
+    }
+
     socket.on('startTime', onStartTime);
     socket.on('data', onData);
     socket.on('config', updateConfig);
     socket.on('ports', updatePorts);
     socket.on('portConnected', onPortConnected);
     socket.on('logStatus', onLogStatus);
+    socket.on('renogyData', onRenogyData);
+    socket.on('renogyInfo', onRenogyInfo);
     ubx.on('write', handleWrite);
     ubx.ubxParser.on('update', onUbxUpdate);
     ubx.rtcm3Parser.on('update', onRtcm3Update);

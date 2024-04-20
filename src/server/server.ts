@@ -7,6 +7,7 @@ import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import { Renogy } from '@/core/renogy2';
 import { TransparentTcpLink } from './transparent-tcp-link';
 import { NtripTransport } from './ntrip-transport';
 import { uBloxSerial } from './ublox-serial';
@@ -42,6 +43,7 @@ const ntrip = new NtripTransport();
 const externInLog = new StreamLogger();
 const rtcm3OutLog = new StreamLogger();
 const ubxOutLog = new StreamLogger();
+const renogy = new Renogy();
 
 const io = new Server(server, {
     cors: {
@@ -74,7 +76,7 @@ async function connectSerialPort(path: string, baud: number) {
         console.log(`Opened serial port              ${ubxSerial.path}`);
 
         io.emit('portConnected', ubxSerial.path);
-        
+
         if (configObject.ntrip.enable) {
             ntrip.connect(
                 configObject.ntrip.host,
@@ -188,6 +190,17 @@ io.on('connect', (socket) => {
             }
         }
 
+        if (
+            newConfig.renogySolar.enable !== configObject.renogySolar.enable ||
+            newConfig.renogySolar.port !== configObject.renogySolar.port
+        ) {
+            if (newConfig.renogySolar.enable) {
+                renogy.begin(newConfig.renogySolar.port);
+            } else {
+                renogy.close();
+            }
+        }
+
         // save new config file
         configObject = { ...newConfig };
         fs.writeFileSync('config/default.json', JSON.stringify(configObject, null, 2));
@@ -254,6 +267,33 @@ if (configObject.tcpRepeater.enable) {
     connectTcpRepeater(configObject.tcpRepeater.port);
 }
 
+renogy.on('connected', () => {
+    console.log(`Renogy device connected on      ${configObject.renogySolar.port}`);
+    renogy.startPolling();
+    io.emit('renogyConnected');
+});
+
+renogy.on('disconnected', () => {
+    console.log('Renogy device disconnected');
+    io.emit('renogyDisconnected');
+});
+
+renogy.on('data', (raw) => {
+    io.emit('renogyData', raw);
+    if (renogy.data.battV && renogy.data.battV < configObject.renogySolar.lowVoltageCutoff + 0.1) {
+        console.log('Renogy battery voltage below cutoff, shutting down!');
+        exec('sudo shutdown now');
+    }
+});
+
+renogy.on('info', (raw) => {
+    io.emit('renogyInfo', raw);
+});
+
+if (configObject.renogySolar.enable) {
+    renogy.begin(configObject.renogySolar.port);
+}
+
 server.listen(configObject.websocket.port, () => {
     console.log(`Websocket server started on     *:${configObject.websocket.port}`);
 });
@@ -270,8 +310,10 @@ process.on('SIGINT', async () => {
             });
         });
         console.log('Socket.io (websocket) closed');
+        ntrip.close();
         await tcpRepeater.close();
         await ubxSerial.close();
+        await renogy.close();
         console.log('Shutdown complete, exiting');
         process.exit(0);
     } catch (error) {

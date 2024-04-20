@@ -20,6 +20,9 @@
     "enable": true,
     "port": 2001
   },
+  "logging": {
+    "enable": false
+  },
   "savedLocation": {
     "ecefXOrLat": 0,
     "ecefYOrLon": 0,
@@ -29,7 +32,7 @@
   "renogySolar": {
     "enable": false,
     "port": "/dev/ttyUSB0",
-    "lowVoltageCutoff": 11.2
+    "lowVoltageCutoff": 11.1
   },
   "advanced": {
     "useMSM7": false,

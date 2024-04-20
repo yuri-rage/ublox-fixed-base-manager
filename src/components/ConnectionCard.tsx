@@ -1,6 +1,4 @@
-import { useSignalEffect } from '@preact/signals-react';
-import { toast } from 'sonner';
-import { BAUD_RATES, requestPorts, serialPorts, connectedPort, appConfig, sendConfig } from '@/globals';
+import { BAUD_RATES, requestPorts, serialPorts, appConfig, sendConfig } from '@/globals';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectGroup } from '@/components/ui/select';
 import { SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,15 +6,6 @@ import { StyledButton } from '@/components/ui/StyledButton';
 import { AboutHoverCard } from '@/components/AboutHoverCard';
 
 export const ConnectionCard = () => {
-    useSignalEffect(() => {
-        if (connectedPort.value === '') {
-            return;
-        }
-        toast('Serial Port Connected', {
-            description: `Saved config: ${connectedPort.value}`,
-        });
-    });
-
     const handleSelectChange = (value: string) => {
         const newConfig = { ...appConfig.value };
         newConfig.serial.device = value;

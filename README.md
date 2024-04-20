@@ -76,17 +76,15 @@ dtoverlay=disable-WiFi
 ```
 
 ---
-### RENOGY SOLAR CHARGE CONTROLLER
+### RENOGY SOLAR CHARGE CONTROLLER SUPPORT
 
-The app supports additional features when a Renogy solar charge controller is in use, including safe shutdown on low voltage.
+The app supports additional features when a Renogy solar charge controller is in use, including safe shutdown on low voltage detection.
 
 The [Renogy Wanderer (10A)](https://www.amazon.com/gp/product/B07NPDWZJ7/) is fully supported. Other Renogy models should work but remain untested.
 
-An [RS232 to USB converter](https://www.amazon.com/gp/product/B003WOWBBW/) is required for Renogy data to be available in the app.
-
 The app uses a foundation inspired by the [NodeRenogy](https://github.com/sophienyaa/NodeRenogy) project, and additional information can be found on its landing page.
 
-The RS232 adapter pinout provided by [NodeRenogy](https://github.com/sophienyaa/NodeRenogy) is slightly confusing. A  modified reference image is provided below for clarity.
+An [RS232 to USB converter](https://www.amazon.com/gp/product/B003WOWBBW/) is required for connection to the Raspberry Pi, along with a DB9 to RJ12 adapter, which can be easily crimped/soldered together as a small DIY project. The adapter pinout provided by [NodeRenogy](https://github.com/sophienyaa/NodeRenogy) is slightly confusing. A  modified reference image is provided below for clarity.
 
 ![RS232 Pinout](rs232_pinout.png)
 
@@ -133,6 +131,8 @@ After desired sample time:
 ### ADVANCED CONFIGURATION
 
 Settings are stored at `~/fixedbase/config/default.json` and are largely managed via the web interface. However, a few settings do not appear in the web app and may be useful for specialized installations.
+
+* `logging.enable` If true on initial startup will automatically be set false. Logging must always be manually handled on the web interface Utilities tab. This is a safeguard to avoid logging indefinitely and causing disk space issues.
 
 *  `useMSM7` If true, replaces the default MSM4 RTCM3 message set with MSM7. These messages require higher bandwidth and may not be suitable for long range telemetry. MSM7 typically offers little to no practical precision gain over MSM4.
 

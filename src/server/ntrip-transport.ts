@@ -1,3 +1,4 @@
+import eventemitter3 from 'eventemitter3';
 import http2 from 'http2';
 import { Socket } from 'net';
 import { version } from '../../package.json';
@@ -29,10 +30,14 @@ export const hasInternet = (timeout = 5000): Promise<boolean> => {
     });
 };
 
-export class NtripTransport {
+export class NtripTransport extends eventemitter3 {
     private _client: Socket | null = null;
     private _enabled = false;
     private _startTime: Date | null = null;
+
+    constructor() {
+        super();
+    }
 
     public async connect(
         host: string,
@@ -43,7 +48,7 @@ export class NtripTransport {
     ) {
         this._enabled = true;
 
-        // always wait at least a few seconds before attempting NTRIP connection
+        // wait a few seconds before attempting NTRIP connection
         // slightly hacky way of avoiding immediate failures on startup, prior to internet connectivity
         setTimeout(() => this._connect(host, port, mountPoint, password), delay);
     }
@@ -79,6 +84,7 @@ export class NtripTransport {
             if (response.includes('ICY 200 OK')) {
                 console.log('NTRIP transport service connected');
                 this._startTime = new Date();
+                this.emit('connected');
                 return;
             }
 
@@ -92,11 +98,13 @@ export class NtripTransport {
             }
             this.close();
             console.log('NTRIP service disabled, user attention required');
+            this.emit('error', response)
         });
 
         this._client.on('close', () => {
             console.log('NTRIP connection closed');
             this._startTime = null;
+            this.emit('disconnected');
             if (this._enabled) {
                 console.log(
                     `Unexpected NTRIP host disconnection, attempting reconnect in ${RAPID_RETRY_INTERVAL / 1000} seconds...`,

@@ -7,35 +7,40 @@ export class TransparentTcpLink {
     private _clients: net.Socket[] = [];
     private _startTime: Date | null = null;
 
-    public create(port: number, onData: DataCallback) {
-        this._server = net.createServer((socket) => {
-            this._clients.push(socket);
-            console.log(`New transparent TCP link client (${this._clients.length} total)`);
+    public create(port: number, onData: DataCallback): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this._server = net.createServer((socket) => {
+                this._clients.push(socket);
+                console.log(`New transparent TCP link client (${this._clients.length} total)`);
 
-            socket.on('data', onData);
+                socket.on('data', onData);
 
-            socket.on('error', (err) => {
-                console.error('Transparent TCP link error:', err);
+                socket.on('error', (err) => {
+                    console.error('Transparent TCP link error:', err);
+                });
+
+                socket.on('close', () => {
+                    const index = this._clients.indexOf(socket);
+                    if (index !== -1) {
+                        this._clients.splice(index, 1);
+                    }
+                    socket.removeAllListeners();
+                    console.log(`Transparent TCP link client disconnected (${this._clients.length} remain)`);
+                });
             });
 
-            socket.on('close', () => {
-                const index = this._clients.indexOf(socket);
-                if (index !== -1) {
-                    this._clients.splice(index, 1);
-                }
-                socket.removeAllListeners();
-                console.log(`Transparent TCP link client disconnected (${this._clients.length} remain)`);
+            this._server.on('close', () => {
+                console.log('Transparent TCP link closed');
+                this._startTime = null;
             });
-        });
 
-        this._server.on('close', () => {
-            console.log('Transparent TCP link closed');
-            this._startTime = null;
-        });
+            this._server.listen(port, () => {
+                console.log(`Transparent TCP link started on *:${port}`);
+                this._startTime = new Date();
+                resolve();
+            });
 
-        this._server.listen(port, () => {
-            console.log(`Transparent TCP link started on *:${port}`);
-            this._startTime = new Date();
+            this._server.on('error', reject);
         });
     }
 

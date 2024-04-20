@@ -5,6 +5,7 @@ import { uBloxGps } from '@/core/ublox-gps';
 import { UBX } from '@/core/ublox-interface';
 import { CoordinateTranslator } from '@/core/coordinate-translator';
 import { RenogyData } from '@/core/renogy-data';
+import { toast } from 'sonner';
 
 const originRoot = window.location.origin.split(':').slice(0, 2).join(':');
 
@@ -32,7 +33,6 @@ export const ubxNavPvtCount = signal(0);
 export const ubxNavSvinCount = signal(0);
 export const ubxRxmRawxCount = signal(0);
 export const renogyUpdateCount = signal(0);
-export const loggingStatus = signal(false);
 
 export type ServiceStartTimes = {
     server: Date | null;
@@ -57,6 +57,7 @@ export const appConfig = signal({
     ntrip: { enable: false, host: '', port: 0, mountpoint: '', password: '' },
     tcpRepeater: { enable: false, port: 0 },
     savedLocation: { ecefXOrLat: 0, ecefYOrLon: 0, ecefZOrAlt: 0, fixedPosAcc: 0 },
+    logging: { enable: false },
     renogySolar: { enable: false, port: '', lowVoltageCutoff: 0 },
     advanced: {
         useMSM7: false,
@@ -95,14 +96,13 @@ export const location = computed(() => {
 });
 
 export const serialPorts = signal([]);
-export const connectedPort = signal('');
 
 export function updateAppConfig(path: string, value: any) {
     const newConfig = { ...appConfig.value };
     try {
         setProperty(newConfig, path, value);
     } catch (e) {
-        console.error(`Error updating config: ${path} not set to ${value}`, e);
+        toast(`Error updating config: ${path} not set to ${value}`);
     }
     appConfig.value = newConfig;
 }
@@ -128,10 +128,6 @@ effect(() => {
 
     function handleWrite(data: any) {
         socket.emit('write', data);
-    }
-
-    function onLogStatus(data: any) {
-        loggingStatus.value = data as boolean;
     }
 
     function onUbxUpdate(count: number) {
@@ -160,25 +156,72 @@ effect(() => {
         }
     }
 
-    function onPortConnected(port: string) {
-        connectedPort.value = port;
-    }
+    const onPortStatus = (data: boolean) => {
+        if (data) {
+            toast.success(`${appConfig.value.serial.device} opened for GPS communication`);
+            return;
+        }
+        toast.error(`${appConfig.value.serial.device} closed, GPS communication stopped`);
+    };
 
-    function onRenogyData(raw: number[]) {
+    const onTcpRepeaterStatus = (data: boolean) => {
+        if (data) {
+            toast.success(`TCP repeater listening on server port ${appConfig.value.tcpRepeater.port}`);
+            return;
+        }
+        toast.error('TCP repeater stopped');
+    };
+
+    const onNtripStatus = (data: boolean) => {
+        if (data) {
+            toast.success(`NTRIP service started on mountpoint ${appConfig.value.ntrip.mountpoint}`);
+            return;
+        }
+        toast.error('NTRIP service stopped');
+    };
+
+    const onNtripError = (text: string) => {
+        toast.error(`NTRIP service error: ${text}`, {
+            duration: 10000,
+            closeButton: true,
+        });
+    };
+
+    const onLogStatus = (data: boolean) => {
+        if (data) {
+            toast.success('Started logging GPS data');
+            return;
+        }
+        toast.error('Stopped logging GPS data');
+    };
+
+    const onRenogyStatus = (data: boolean) => {
+        if (data) {
+            toast.success(`Renogy device connected on ${appConfig.value.renogySolar.port}`);
+            return;
+        }
+        toast.error('Renogy device disconnected');
+    };
+
+    const onRenogyData = (raw: number[]) => {
         renogy.rawData = raw;
-    }
+    };
 
-    function onRenogyInfo(raw: number[]) {
+    const onRenogyInfo = (raw: number[]) => {
         renogy.rawControllerInfo = raw;
         renogyUpdateCount.value++;
-    }
+    };
 
     socket.on('startTime', onStartTime);
     socket.on('data', onData);
     socket.on('config', updateConfig);
     socket.on('ports', updatePorts);
-    socket.on('portConnected', onPortConnected);
+    socket.on('portStatus', onPortStatus);
+    socket.on('tcpRepeaterStatus', onTcpRepeaterStatus);
+    socket.on('ntripStatus', onNtripStatus);
+    socket.on('ntripError', onNtripError);
     socket.on('logStatus', onLogStatus);
+    socket.on('renogyStatus', onRenogyStatus);
     socket.on('renogyData', onRenogyData);
     socket.on('renogyInfo', onRenogyInfo);
     ubx.on('write', handleWrite);
@@ -192,7 +235,6 @@ effect(() => {
 
     requestPorts();
     requestConfig();
-    requestLogStatus();
 
     return () => {
         socket.removeAllListeners();
@@ -216,12 +258,4 @@ export function requestConfig() {
 
 export function sendConfig() {
     socket.emit('config', appConfig.value);
-}
-
-export function requestLogStatus() {
-    socket.emit('getLogStatus');
-}
-
-export function setLogStatus(requestedStatus: boolean) {
-    socket.emit('setLogStatus', requestedStatus);
 }

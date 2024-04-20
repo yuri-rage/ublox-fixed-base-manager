@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { setLogStatus, loggingStatus } from '@/globals';
+import { appConfig, sendConfig, updateAppConfig } from '@/globals';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { TooltipContainer } from '@/components/ui/TooltipContainer';
@@ -10,8 +10,9 @@ export const LogEnableSwitch: React.FC<
     const LogEnableSwitchClassName = 'flex items-center justify-start space-x-2';
 
     const onLoggingChange = (checked: boolean) => {
-        loggingStatus.value = checked;
-        setLogStatus(loggingStatus.value);
+        appConfig.value.logging.enable = checked;
+        updateAppConfig('logging.enable', checked);
+        sendConfig();
     };
 
     return (
@@ -19,12 +20,12 @@ export const LogEnableSwitch: React.FC<
             <Label>Logging</Label>
             <Switch
                 id="logging"
-                checked={loggingStatus.value}
+                checked={appConfig.value.logging.enable}
                 onCheckedChange={(checked) => onLoggingChange(checked.valueOf() as boolean)}
             />
             <TooltipContainer tooltipText="Logs are stored on the Raspberry Pi and contain binary GPS data for PPK analysis.">
                 <Label htmlFor="logging" className="cursor-pointer">
-                    {loggingStatus.value ? 'Enabled' : 'Disabled'}
+                    {appConfig.value.logging.enable ? 'Enabled' : 'Disabled'}
                 </Label>
             </TooltipContainer>
         </div>

@@ -71,11 +71,24 @@ app.use(cors());
 
 const connectedSockets = new Set(); // keep track of connected sockets
 
+ntrip.on('connected', () => {
+    io.emit('ntripStatus', true);
+});
+
+ntrip.on('disconnected', () => {
+    io.emit('ntripStatus', false);
+});
+
+ntrip.on('error', (text) => {
+    // delay sending the error so it doesn't get overshadowed by a disconnect message
+    setTimeout(() => io.emit('ntripError', text), 2000);
+});
+
 async function connectSerialPort(path: string, baud: number) {
     const onConnect = () => {
         console.log(`Opened serial port              ${ubxSerial.path}`);
 
-        io.emit('portConnected', ubxSerial.path);
+        io.emit('portStatus', true);
 
         if (configObject.ntrip.enable) {
             ntrip.connect(
@@ -90,7 +103,7 @@ async function connectSerialPort(path: string, baud: number) {
 
     const onDisconnect = () => {
         console.log(`Serial port closed`);
-        io.emit('portDisconnected', ubxSerial.path);
+        io.emit('portStatus', false);
         ntrip.close();
     };
 
@@ -127,15 +140,58 @@ async function connectSerialPort(path: string, baud: number) {
     ubxSerial.create(path, baud, onConnect, onDisconnect, onUbxMsg, onRtcm3Msg, onNmeaMsg);
 }
 
-function connectTcpRepeater(port: number) {
-    if (tcpRepeater.isActive) {
-        tcpRepeater.close();
-    }
-    tcpRepeater.create(port, (data) => {
-        ubxSerial.write(data);
-        externInLog.write(data);
+const connectTcpRepeater = (port: number) => {
+    if (tcpRepeater.isActive) tcpRepeater.close();
+
+    tcpRepeater
+        .create(port, (data) => {
+            ubxSerial.write(data);
+            externInLog.write(data);
+        })
+        .then(() => {
+            io.emit('tcpRepeaterStatus', true);
+        });
+};
+
+const disconnectTcpRepeater = () => {
+    tcpRepeater.close().then(() => {
+        io.emit('tcpRepeaterStatus', false);
     });
-}
+};
+
+const startLogging = () => {
+    const emitStatus = () => {
+        if (externInLog.isOpen && rtcm3OutLog.isOpen && ubxOutLog.isOpen) {
+            io.emit('logStatus', true);
+        }
+    };
+    externInLog.open(LOG_DIR, LOG_IN_PREFIX).then(emitStatus);
+    rtcm3OutLog.open(LOG_DIR, LOG_RTCM3_OUT_PREFIX).then(emitStatus);
+    ubxOutLog.open(LOG_DIR, LOG_UBX_OUT_PREFIX, LOG_UBX_OUT_EXTENSION).then(emitStatus);
+};
+
+const stopLogging = () => {
+    const emitStatus = () => {
+        if (!externInLog.isOpen && !rtcm3OutLog.isOpen && !ubxOutLog.isOpen) {
+            io.emit('logStatus', false);
+        }
+    };
+    externInLog.close().then(emitStatus);
+    rtcm3OutLog.close().then(emitStatus);
+    ubxOutLog.close().then(emitStatus);
+};
+
+const connectRenogy = (port: string) => {
+    renogy.begin(port).then(() => {
+        io.emit('renogyStatus', true);
+    });
+};
+
+const disconnectRenogy = () => {
+    renogy.close().then(() => {
+        io.emit('renogyStatus', false);
+    });
+};
 
 io.on('connect', (socket) => {
     connectedSockets.add(socket.id);
@@ -166,7 +222,7 @@ io.on('connect', (socket) => {
             if (newConfig.tcpRepeater.enable) {
                 connectTcpRepeater(newConfig.tcpRepeater.port);
             } else {
-                tcpRepeater.close();
+                disconnectTcpRepeater();
             }
         }
 
@@ -190,14 +246,22 @@ io.on('connect', (socket) => {
             }
         }
 
+        if (newConfig.logging.enable !== configObject.logging.enable) {
+            if (newConfig.logging.enable) {
+                startLogging();
+            } else {
+                stopLogging();
+            }
+        }
+
         if (
             newConfig.renogySolar.enable !== configObject.renogySolar.enable ||
             newConfig.renogySolar.port !== configObject.renogySolar.port
         ) {
             if (newConfig.renogySolar.enable) {
-                renogy.begin(newConfig.renogySolar.port);
+                connectRenogy(newConfig.renogySolar.port);
             } else {
-                renogy.close();
+                disconnectRenogy();
             }
         }
 
@@ -218,22 +282,6 @@ io.on('connect', (socket) => {
         exec('sudo reboot');
     };
 
-    const handleGetLogStatus = () => {
-        socket.emit('logStatus', externInLog.isOpen || rtcm3OutLog.isOpen);
-    };
-
-    const handleSetLogStatus = (data: boolean) => {
-        if (data) {
-            externInLog.open(LOG_DIR, LOG_IN_PREFIX);
-            rtcm3OutLog.open(LOG_DIR, LOG_RTCM3_OUT_PREFIX);
-            ubxOutLog.open(LOG_DIR, LOG_UBX_OUT_PREFIX, LOG_UBX_OUT_EXTENSION);
-            return;
-        }
-        externInLog.close();
-        rtcm3OutLog.close();
-        ubxOutLog.close();
-    };
-
     const handleGetStartTime = () => {
         socket.emit('startTime', {
             os: osBootTime,
@@ -250,8 +298,6 @@ io.on('connect', (socket) => {
     socket.on('write', handleWrite);
     socket.on('shutdown', handleShutdown);
     socket.on('reboot', handleReboot);
-    socket.on('getLogStatus', handleGetLogStatus);
-    socket.on('setLogStatus', handleSetLogStatus);
     socket.on('getStartTime', handleGetStartTime);
 
     socket.on('disconnect', () => {
@@ -291,7 +337,13 @@ renogy.on('info', (raw) => {
 });
 
 if (configObject.renogySolar.enable) {
-    renogy.begin(configObject.renogySolar.port);
+    connectRenogy(configObject.renogySolar.port);
+}
+
+// never automatically start logging (to avoid disk space issues)
+if (configObject.logging.enable) {
+    configObject.logging.enable = false;
+    fs.writeFileSync('config/default.json', JSON.stringify(configObject, null, 2));
 }
 
 server.listen(configObject.websocket.port, () => {

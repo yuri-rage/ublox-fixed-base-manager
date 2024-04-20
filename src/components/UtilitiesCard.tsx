@@ -1,8 +1,7 @@
-import { useSignalEffect } from '@preact/signals-react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPowerOff, faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { toast } from 'sonner';
-import { requestLogStatus, socket, ubx } from '@/globals';
+import { socket, ubx } from '@/globals';
 import { UBX } from '@/core/ublox-interface';
 import { Card, CardContent } from '@/components/ui/card';
 import { ConfirmButton } from '@/components/ui/ConfirmButton';
@@ -10,10 +9,6 @@ import { LogEnableSwitch } from './ui/LogEnableSwitch';
 import { SaveButton } from '@/components/ui/SaveButton';
 
 export const UtilitiesCard = () => {
-    useSignalEffect(() => {
-        requestLogStatus();
-    });
-
     const onRevertDefaultsClick = () => {
         ubx.write(ubx.generate.resetToDefaults());
         toast('u-Blox GPS module reset to defaults');

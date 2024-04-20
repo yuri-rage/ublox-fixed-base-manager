@@ -41,6 +41,8 @@ export class Renogy extends eventemitter3 {
 
     public begin = async (serialPort: string, baudRate: number = 9600) => {
         try {
+            if (this._modbusClient.isOpen) await this.close();
+
             this._modbusClient.setTimeout(500);
             await this._modbusClient.connectRTUBuffered(serialPort, { baudRate: baudRate });
             this.emit('connected');

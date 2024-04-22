@@ -292,6 +292,10 @@ io.on('connect', (socket) => {
         });
     };
 
+    const handleSetBattType = (battType: number) => {
+        renogy.setBatteryType(battType);
+    };
+
     socket.on('getConfig', getConfig);
     socket.on('getPorts', getPorts);
     socket.on('config', updateConfig);
@@ -299,7 +303,7 @@ io.on('connect', (socket) => {
     socket.on('shutdown', handleShutdown);
     socket.on('reboot', handleReboot);
     socket.on('getStartTime', handleGetStartTime);
-
+    socket.on('renogySetBattType', handleSetBattType);
     socket.on('disconnect', () => {
         connectedSockets.delete(socket.id);
         socket.removeAllListeners();
@@ -314,6 +318,9 @@ if (configObject.tcpRepeater.enable) {
 }
 
 renogy.on('connected', () => {
+    // this may be slightly optimistic, as the port gets opened if
+    // it exists and is available, but that alone is not indicative
+    // of a successful Renogy device connection
     console.log(`Renogy device connected on      ${configObject.renogySolar.port}`);
     renogy.startPolling();
     io.emit('renogyConnected');
@@ -334,6 +341,14 @@ renogy.on('data', (raw) => {
 
 renogy.on('info', (raw) => {
     io.emit('renogyInfo', raw);
+});
+
+renogy.on('params', (raw) => {
+    io.emit('renogyParams', raw);
+});
+
+renogy.on('battType', (battType) => {
+    io.emit('renogyBattType', battType);
 });
 
 if (configObject.renogySolar.enable) {

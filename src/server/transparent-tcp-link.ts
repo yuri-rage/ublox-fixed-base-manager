@@ -1,5 +1,11 @@
 import net from 'net';
 
+interface NodeJSError extends Error {
+    code?: string;
+    errno?: number;
+    syscall?: string;
+}
+
 type DataCallback = (data: any) => void;
 
 export class TransparentTcpLink {
@@ -16,7 +22,8 @@ export class TransparentTcpLink {
                 socket.on('data', onData);
 
                 socket.on('error', (err) => {
-                    console.error('Transparent TCP link error:', err);
+                    const error = err as NodeJSError; // assert type to avoid TS errors
+                    console.error(`Transparent TCP link error: ${error.syscall} ${error.code}`);
                 });
 
                 socket.on('close', () => {

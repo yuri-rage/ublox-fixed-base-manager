@@ -4,7 +4,7 @@ import { setProperty } from 'dot-prop';
 import { uBloxGps } from '@/core/ublox-gps';
 import { UBX } from '@/core/ublox-interface';
 import { CoordinateTranslator } from '@/core/coordinate-translator';
-import { RenogyData } from '@/core/renogy-data';
+import { BATT_TYPE, RenogyData } from '@/core/renogy-data';
 import { toast } from 'sonner';
 
 const originRoot = window.location.origin.split(':').slice(0, 2).join(':');
@@ -203,12 +203,24 @@ effect(() => {
         toast.error('Renogy device disconnected');
     };
 
+    const onRenogyBattType = (battType: number | null) => {
+        if (battType === null) {
+            toast.error('Failed to set Renogy battery type');
+            return;
+        }
+        toast.success(`Renogy battery type set to '${BATT_TYPE[battType]}'`);
+    };
+
     const onRenogyData = (raw: number[]) => {
         renogy.rawData = raw;
     };
 
     const onRenogyInfo = (raw: number[]) => {
         renogy.rawControllerInfo = raw;
+    };
+
+    const onRenogyParams = (raw: number[]) => {
+        renogy.rawChargerParams = raw;
         renogyUpdateCount.value++;
     };
 
@@ -222,8 +234,10 @@ effect(() => {
     socket.on('ntripError', onNtripError);
     socket.on('logStatus', onLogStatus);
     socket.on('renogyStatus', onRenogyStatus);
+    socket.on('renogyBattType', onRenogyBattType);
     socket.on('renogyData', onRenogyData);
     socket.on('renogyInfo', onRenogyInfo);
+    socket.on('renogyParams', onRenogyParams);
     ubx.on('write', handleWrite);
     ubx.ubxParser.on('update', onUbxUpdate);
     ubx.rtcm3Parser.on('update', onRtcm3Update);

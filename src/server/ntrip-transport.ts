@@ -3,7 +3,11 @@ import http2 from 'http2';
 import { Socket } from 'net';
 import { version } from '../../package.json';
 
-// TODO: implement a reconnection scheme (check for and handle disconnects)
+interface NodeJSError extends Error {
+    code?: string;
+    errno?: number;
+    syscall?: string;
+}
 
 const USER_AGENT = 'FixedBaseManager';
 const RAPID_RETRIES = 3;
@@ -72,8 +76,9 @@ export class NtripTransport extends eventemitter3 {
 
         this._client = new Socket();
 
-        this._client.on('error', (error) => {
-            console.error('NTRIP connection error:', error);
+        this._client.on('error', (err) => {
+            const error = err as NodeJSError; // assert type to avoid TS errors
+            console.error(`NTRIP connection error: ${error.syscall} ${error.code}`);
             this._startTime = null;
         });
 
@@ -98,7 +103,7 @@ export class NtripTransport extends eventemitter3 {
             }
             this.close();
             console.log('NTRIP service disabled, user attention required');
-            this.emit('error', response)
+            this.emit('error', response);
         });
 
         this._client.on('close', () => {

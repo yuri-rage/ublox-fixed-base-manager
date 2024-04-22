@@ -6,12 +6,16 @@
 
 import eventemitter3 from 'eventemitter3';
 import ModbusRTU from 'modbus-serial';
-import { RenogyData } from './renogy-data';
-
-const DATA_START_REGISTER = 0x100;
-const NUM_DATA_REGISTERS = 34;
-const INFO_START_REGISTER = 0x00a;
-const NUM_INFO_REGISTERS = 17;
+import {
+    DATA_START_REGISTER,
+    INFO_START_REGISTER,
+    NUM_DATA_REGISTERS,
+    NUM_INFO_REGISTERS,
+    NUM_PARAM_REGISTERS,
+    PARAM_START_REGISTER,
+    BATT_TYPE,
+    RenogyData,
+} from './renogy-data';
 
 export class Renogy extends eventemitter3 {
     private _modbusClient: ModbusRTU;
@@ -71,22 +75,33 @@ export class Renogy extends eventemitter3 {
         }
     };
 
+    public updateChargerParams = async () => {
+        try {
+            const raw = await this._readController(PARAM_START_REGISTER, NUM_PARAM_REGISTERS);
+            this._data.rawChargerParams = raw;
+            this.emit('params', raw);
+        } catch (e) {
+            console.error('Renogy: failed to update charger parameters');
+        }
+    };
+
     public get data() {
         return this._data;
     }
 
-    private _update = () => {
-        this.updateData();
-        setTimeout(() => {
-            this.updateControllerInfo();
-        }, 200);
+    public updateAll = () => {
+        this.updateData().then(() => {
+            this.updateControllerInfo().then(() => {
+                this.updateChargerParams();
+            });
+        });
     };
 
     public startPolling(interval: number = 5000) {
         if (interval > 0) {
-            this._update();
+            this.updateAll();
             this._intervalTimeout = setInterval(() => {
-                this._update();
+                this.updateAll();
             }, interval);
         }
     }
@@ -95,6 +110,21 @@ export class Renogy extends eventemitter3 {
         if (this._intervalTimeout) {
             clearInterval(this._intervalTimeout);
         }
+    }
+
+    public async setBatteryType(battType: number) {
+        if (battType < 0 || battType >= BATT_TYPE.length) {
+            this.emit('battType', null);
+            return;
+        }
+        this._modbusClient
+            .writeRegister(0xe004, battType)
+            .then(() => {
+                this.emit('battType', battType);
+            })
+            .catch((_error) => {
+                this.emit('battType', null);
+            });
     }
 
     public close(): Promise<void> {

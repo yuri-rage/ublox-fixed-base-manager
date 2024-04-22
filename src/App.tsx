@@ -1,4 +1,5 @@
 import { useSignal } from '@preact/signals-react';
+import { appConfig } from '@/globals';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { Toaster } from '@/components/ui/sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -18,7 +19,6 @@ import { UbxVersionCard } from '@/components/UbxVersionCard';
 import { UtilitiesCard } from '@/components/UtilitiesCard';
 import { showNmeaConsole } from '@/components/NmeaConsoleCard';
 import { RenogyDataCard } from './components/RenogyDataCard';
-import { appConfig } from './globals';
 
 // TODO: potentially await ACK for each write that requires one (and notify on failure)
 
@@ -71,6 +71,9 @@ export const App = () => {
                                 )}
                             </div>
                         </TabsContent>
+                        <TabsContent value="renogy">
+                            <RenogyDataCard />
+                        </TabsContent>
                         <TabsContent value="svin">
                             <div className="flex flex-wrap gap-3">
                                 <SvinCard />
@@ -90,9 +93,6 @@ export const App = () => {
                         </TabsContent>
                         <TabsContent value="utilities">
                             <UtilitiesCard />
-                        </TabsContent>
-                        <TabsContent value="renogy">
-                            <RenogyDataCard />
                         </TabsContent>
                     </Tabs>
                 </Card>

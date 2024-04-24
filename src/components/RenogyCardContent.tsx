@@ -8,6 +8,8 @@ import { SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { TooltipContainer } from '@/components/ui/TooltipContainer';
 
+// TODO: make the lowVoltageCutoff a switch and output boolean rather than choosing a voltage value
+
 export const RenogyCardContent = () => {
     const lowVoltageCutoff = useSignal(appConfig.value.renogySolar.lowVoltageCutoff.toString());
 

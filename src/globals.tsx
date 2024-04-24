@@ -5,6 +5,7 @@ import { uBloxGps } from '@/core/ublox-gps';
 import { UBX } from '@/core/ublox-interface';
 import { CoordinateTranslator } from '@/core/coordinate-translator';
 import { BATT_TYPE, RenogyData } from '@/core/renogy-data';
+import { RenogyLogData } from '@/core/renogy-log';
 import { toast } from 'sonner';
 
 const originRoot = window.location.origin.split(':').slice(0, 2).join(':');
@@ -19,6 +20,7 @@ export const MIN_SVIN_TIME = 60; // default to 1 min svin time
 export const socket = io(`${originRoot}:3001`);
 export const ubx = new uBloxGps();
 export const renogy = new RenogyData();
+export const renogyLog = signal<RenogyLogData | null>(null);
 
 // signals
 export const rtcm3Count = signal(0);
@@ -224,6 +226,10 @@ effect(() => {
         renogyUpdateCount.value++;
     };
 
+    const onRenogyLog = (data: RenogyLogData) => {
+        renogyLog.value = data;
+    };
+
     socket.on('startTime', onStartTime);
     socket.on('data', onData);
     socket.on('config', updateConfig);
@@ -238,6 +244,7 @@ effect(() => {
     socket.on('renogyData', onRenogyData);
     socket.on('renogyInfo', onRenogyInfo);
     socket.on('renogyParams', onRenogyParams);
+    socket.on('renogyLog', onRenogyLog);
     ubx.on('write', handleWrite);
     ubx.ubxParser.on('update', onUbxUpdate);
     ubx.rtcm3Parser.on('update', onRtcm3Update);

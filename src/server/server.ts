@@ -8,6 +8,7 @@ import http from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { Renogy } from '@/core/renogy2';
+import { RenogyLog } from '@/core/renogy-log';
 import { TransparentTcpLink } from './transparent-tcp-link';
 import { NtripTransport } from './ntrip-transport';
 import { uBloxSerial } from './ublox-serial';
@@ -44,6 +45,7 @@ const externInLog = new StreamLogger();
 const rtcm3OutLog = new StreamLogger();
 const ubxOutLog = new StreamLogger();
 const renogy = new Renogy();
+const renogyLog = new RenogyLog();
 
 const io = new Server(server, {
     cors: {
@@ -296,6 +298,10 @@ io.on('connect', (socket) => {
         renogy.setBatteryType(battType);
     };
 
+    const handleGetRenogyLog = () => {
+        renogyLog.emitUpdate();
+    };
+
     socket.on('getConfig', getConfig);
     socket.on('getPorts', getPorts);
     socket.on('config', updateConfig);
@@ -304,6 +310,7 @@ io.on('connect', (socket) => {
     socket.on('reboot', handleReboot);
     socket.on('getStartTime', handleGetStartTime);
     socket.on('renogySetBattType', handleSetBattType);
+    socket.on('getRenogyLog', handleGetRenogyLog);
     socket.on('disconnect', () => {
         connectedSockets.delete(socket.id);
         socket.removeAllListeners();
@@ -333,10 +340,18 @@ renogy.on('disconnected', () => {
 
 renogy.on('data', (raw) => {
     io.emit('renogyData', raw);
+    renogyLog.update(renogy.data);
+
+    // TODO: just make renogySolar.lowVoltageCutoff a boolean and use the modbus cutoff value to determine when to shut down
+
     if (renogy.data.battV && renogy.data.battV < configObject.renogySolar.lowVoltageCutoff + 0.1) {
         console.log('Renogy battery voltage below cutoff, shutting down!');
         exec('sudo shutdown now');
     }
+});
+
+renogyLog.on('data', (data) => {
+    io.emit('renogyLog', data);
 });
 
 renogy.on('info', (raw) => {

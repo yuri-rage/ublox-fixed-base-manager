@@ -6,11 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectGroup } from '@/components/ui/select';
 import { SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { SimpleAlertDialog } from './ui/SimpleAlertDialog';
+import { SimpleAlertDialog } from '@/components/ui/SimpleAlertDialog';
 import { StyledButton } from '@/components/ui/StyledButton';
 import { TooltipContainer } from '@/components/ui/TooltipContainer';
-
-// TODO: maybe use Ah Today * average of vMin and vMax to calculate consumed Wh Today
+import { RenogyChart } from './RenogyChart';
 
 export const RenogyDataCard = () => {
     const dialogOpen = useSignal(false);
@@ -31,7 +30,7 @@ export const RenogyDataCard = () => {
     };
 
     useEffect(() => {
-        const [idx, count] = nextFault(renogy.faultBitmask || 0, faultIndex.value);
+        const [idx, count] = nextFault(renogy.faultBitmask ?? 0, faultIndex.value);
         faultIndex.value = idx;
         faultText.value = `Faults (${count}): E${idx.toString().padStart(2, '0')} ${FAULT_CODE[idx]}`;
     }, [renogyUpdateCount.value]);
@@ -187,6 +186,7 @@ export const RenogyDataCard = () => {
                                     Some historical data may be lost."
                 />
             </CardContent>
+            <RenogyChart />
         </Card>
     );
 };

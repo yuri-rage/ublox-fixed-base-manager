@@ -1,6 +1,6 @@
 import { project, unproject } from './ecef-projector2';
 
-function parseGeodetic(str: string) {
+const parseGeodetic = (str: string) => {
     str = str.toUpperCase();
     let sign = str.includes('S') || str.toUpperCase().includes('W') ? -1 : 1;
     str = str.replace(/[^\d.-]/g, ' ');
@@ -13,9 +13,9 @@ function parseGeodetic(str: string) {
     sign *= arr[0] < 0 ? -1 : 1;
     const result = (d + m + s) * sign;
     return isNaN(result) ? 0 : result;
-}
+};
 
-function degToDMS(deg: number) {
+const degToDMS = (deg: number) => {
     const sign = deg < 0 ? -1 : 1;
     deg = Math.abs(deg);
     const d = Math.floor(deg);
@@ -23,9 +23,9 @@ function degToDMS(deg: number) {
     const s = (deg - d - m / 60) * 3600;
 
     return [d * sign, m, s];
-}
+};
 
-function degToString(deg: number, isLat: boolean = true) {
+const degToString = (deg: number, isLat: boolean = true) => {
     const [d, m, s] = degToDMS(deg);
 
     const str = `${Math.abs(d).toString().padStart(2, '0')}° ${m.toString().padStart(2, '0')}' ${s.toFixed(4).padStart(7, '0')}"`;
@@ -35,7 +35,7 @@ function degToString(deg: number, isLat: boolean = true) {
     }
 
     return `${deg < 0 ? 'W' : 'E'} ${str}`;
-}
+};
 
 export class CoordinateTranslator {
     private _lat: number = 0;

@@ -1,4 +1,4 @@
-// some functions ported from Mission Planner source:
+// some methods ported from Mission Planner source:
 // https://github.com/ArduPilot/MissionPlanner/blob/master/ExtLibs/Utilities/ubx_m8p.cs
 
 import { uBloxParser } from './ublox-parser';

@@ -99,7 +99,23 @@ export const location = computed(() => {
 
 export const serialPorts = signal([]);
 
-export function updateAppConfig(path: string, value: any) {
+export const requestStartTime = () => {
+    socket.emit('getStartTime');
+};
+
+export const requestPorts = () => {
+    socket.emit('getPorts');
+};
+
+export const requestConfig = () => {
+    socket.emit('getConfig');
+};
+
+export const sendConfig = () => {
+    socket.emit('config', appConfig.value);
+};
+
+export const updateAppConfig = (path: string, value: any) => {
     const newConfig = { ...appConfig.value };
     try {
         setProperty(newConfig, path, value);
@@ -107,32 +123,32 @@ export function updateAppConfig(path: string, value: any) {
         toast(`Error updating config: ${path} not set to ${value}`);
     }
     appConfig.value = newConfig;
-}
+};
 
 // set up listeners for socket.io and uBloxGps
 effect(() => {
-    function onData(value: any) {
+    const onData = (value: any) => {
         const data = new Uint8Array(value);
         ubx.update(data);
-    }
+    };
 
-    function onStartTime(data: ServiceStartTimes) {
+    const onStartTime = (data: ServiceStartTimes) => {
         systemStartTime.value = data;
-    }
+    };
 
-    function updateConfig(config: any) {
+    const updateConfig = (config: any) => {
         appConfig.value = config;
-    }
+    };
 
-    function updatePorts(ports: any) {
+    const updatePorts = (ports: any) => {
         serialPorts.value = ports;
-    }
+    };
 
-    function handleWrite(data: any) {
+    const handleWrite = (data: any) => {
         socket.emit('write', data);
-    }
+    };
 
-    function onUbxUpdate(count: number) {
+    const onUbxUpdate = (count: number) => {
         ubxMsgCount.value = count;
         ubxCfgPrtCount.value = ubx.ubxParser.ubxCfgPrt.count;
         ubxCfgMsgCount.value = ubx.ubxParser.ubxCfgMsg.count;
@@ -141,22 +157,22 @@ effect(() => {
         ubxNavPvtCount.value = ubx.ubxParser.ubxNavPvt.count;
         ubxNavSvinCount.value = ubx.ubxParser.ubxNavSvin.count;
         ubxRxmRawxCount.value = ubx.ubxParser.ubxRxmRawx.count;
-    }
+    };
 
-    function onRtcm3Update(count: number) {
+    const onRtcm3Update = (count: number) => {
         rtcm3Count.value = count;
-    }
+    };
 
-    function onNmeaUpdate(count: number) {
+    const onNmeaUpdate = (count: number) => {
         nmeaMsgCount.value = count;
-    }
+    };
 
-    function onNmeaMessage(message: Uint8Array) {
+    const onNmeaMessage = (message: Uint8Array) => {
         nmeaMessages.value.push(String.fromCharCode.apply(null, Array.from(message)));
         if (nmeaMessages.value.length > NMEA_MSG_HISTORY) {
             nmeaMessages.value.shift();
         }
-    }
+    };
 
     const onPortStatus = (data: boolean) => {
         if (data) {
@@ -265,18 +281,3 @@ effect(() => {
     };
 });
 
-export function requestStartTime() {
-    socket.emit('getStartTime');
-}
-
-export function requestPorts() {
-    socket.emit('getPorts');
-}
-
-export function requestConfig() {
-    socket.emit('getConfig');
-}
-
-export function sendConfig() {
-    socket.emit('config', appConfig.value);
-}

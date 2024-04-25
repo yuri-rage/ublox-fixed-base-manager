@@ -49,7 +49,7 @@ const renogyLog = new RenogyLog();
 
 const io = new Server(server, {
     cors: {
-        origin: function (origin, callback) {
+        origin: (origin, callback)=> {
             if (origin) {
                 const ip = origin.split('//')[1];
                 if (
@@ -86,7 +86,7 @@ ntrip.on('error', (text) => {
     setTimeout(() => io.emit('ntripError', text), 2000);
 });
 
-async function connectSerialPort(path: string, baud: number) {
+const connectSerialPort = async (path: string, baud: number) => {
     const onConnect = () => {
         console.log(`Opened serial port              ${ubxSerial.path}`);
 
@@ -140,7 +140,7 @@ async function connectSerialPort(path: string, baud: number) {
         return;
     }
     ubxSerial.create(path, baud, onConnect, onDisconnect, onUbxMsg, onRtcm3Msg, onNmeaMsg);
-}
+};
 
 const connectTcpRepeater = (port: number) => {
     if (tcpRepeater.isActive) tcpRepeater.close();

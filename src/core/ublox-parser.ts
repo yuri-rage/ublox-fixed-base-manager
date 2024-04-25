@@ -16,7 +16,7 @@ export const UBX_SIG_ID = [
 
 export const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-function getString(data: Uint8Array, length: number): string {
+const getString = (data: Uint8Array, length: number): string => {
     const nullTerminatedData = data.slice(0, length);
     const firstNullIndex = nullTerminatedData.findIndex((byte) => byte === 0);
     const trimmedData =
@@ -24,52 +24,52 @@ function getString(data: Uint8Array, length: number): string {
     const s = String.fromCharCode.apply(null, Array.from(trimmedData));
     data.set(data.subarray(length));
     return s;
-}
+};
 
-function getUint(data: Uint8Array, length: number): number {
+const getUint = (data: Uint8Array, length: number): number => {
     let u = 0;
     for (let i = length - 1; i >= 0; i--) {
         u = (u << 8) | data[i];
     }
     data.set(data.subarray(length));
     return u;
-}
+};
 
-function getInt8(data: Uint8Array): number {
+const getInt8 = (data: Uint8Array): number => {
     const i = new DataView(data.buffer).getInt8(0);
     data.set(data.subarray(1));
     return i;
-}
+};
 
-function getInt16(data: Uint8Array): number {
+const getInt16 = (data: Uint8Array): number => {
     const sub = data.subarray(0, 2);
     const i = new DataView(sub.buffer).getInt16(0, true);
     data.set(data.subarray(2));
     return i;
-}
+};
 
-function getInt32(data: Uint8Array): number {
+const getInt32 = (data: Uint8Array): number => {
     const sub = data.subarray(0, 4);
     const i = new DataView(sub.buffer).getInt32(0, true);
     data.set(data.subarray(4));
     return i;
-}
+};
 
-function getFloat32(data: Uint8Array): number {
+const getFloat32 = (data: Uint8Array): number => {
     const sub = data.subarray(0, 4);
     const f = new DataView(sub.buffer).getFloat32(0, true);
     data.set(data.subarray(4));
     return f;
-}
+};
 
-function getFloat64(data: Uint8Array): number {
+const getFloat64 = (data: Uint8Array): number => {
     const sub = data.subarray(0, 8);
     const f = new DataView(sub.buffer).getFloat64(0, true);
     data.set(data.subarray(8));
     return f;
-}
+};
 
-export function getUbxChecksum(packet: Uint8Array | number[], size: number, offset = 2) {
+export const getUbxChecksum = (packet: Uint8Array | number[], size: number, offset = 2) => {
     let a = 0x00;
     let b = 0x00;
     let i = offset;
@@ -84,7 +84,7 @@ export function getUbxChecksum(packet: Uint8Array | number[], size: number, offs
     checksum[1] = b & 0xff;
 
     return checksum;
-}
+};
 
 class ubxMsg {
     private _msgClass: number;
@@ -334,7 +334,7 @@ export class ubxNavPvtMsg extends ubxMsg {
         return this._magAcc;
     }
     public get dateStr() {
-        return `${this._day} ${MONTHS[this._month]} ${this._year}`;
+        return `${this._day} ${MONTHS[this._month - 1]} ${this._year}`;
     }
     public get timeStr() {
         return `${this._hour.toString().padStart(2, '0')}:${this._min.toString().padStart(2, '0')}:${this._sec

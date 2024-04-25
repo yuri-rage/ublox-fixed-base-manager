@@ -3,16 +3,15 @@
 import { EventEmitter } from 'eventemitter3';
 
 // CRC should sum to zero if the message is valid
-export function crc24Quick(data: Uint8Array) {
+export const crc24Quick = (data: Uint8Array) => {
     let crc = 0;
     let size = data.length;
     let buffer = Array.from(data);
 
     const crcTable = [
         // Nibble lookup for Qualcomm CRC-24Q
-        0x00000000, 0x01864cfb, 0x038ad50d, 0x020c99f6, 0x0793e6e1, 0x0615aa1a,
-        0x041933ec, 0x059f7f17, 0x0fa18139, 0x0e27cdc2, 0x0c2b5434, 0x0dad18cf,
-        0x083267d8, 0x09b42b23, 0x0bb8b2d5, 0x0a3efe2e,
+        0x00000000, 0x01864cfb, 0x038ad50d, 0x020c99f6, 0x0793e6e1, 0x0615aa1a, 0x041933ec, 0x059f7f17,
+        0x0fa18139, 0x0e27cdc2, 0x0c2b5434, 0x0dad18cf, 0x083267d8, 0x09b42b23, 0x0bb8b2d5, 0x0a3efe2e,
     ];
 
     while (size--) {
@@ -24,7 +23,7 @@ export function crc24Quick(data: Uint8Array) {
     }
 
     return crc & 0xffffff; // Mask to 24-bit, as above optimized for 32-bit
-}
+};
 
 export class Rtcm3Parser extends EventEmitter {
     private _messages = new Map();
@@ -82,7 +81,7 @@ export class Rtcm3Parser extends EventEmitter {
         }
 
         const msgType = (msg[3] << 4) | (msg[4] >> 4);
-        
+
         this._count++;
 
         const key = msgType;

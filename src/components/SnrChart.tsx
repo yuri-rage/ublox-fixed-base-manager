@@ -37,7 +37,7 @@ export const SnrChart = () => {
             },
             tooltip: {
                 callbacks: {
-                    label: function (context: any) {
+                    label: (context: any) => {
                         let label = context.dataset.label || '';
 
                         const index = context.dataIndex;
@@ -57,7 +57,7 @@ export const SnrChart = () => {
         },
     };
 
-    function getDataSet(_trigger: number) {
+    const getDataSet = (_trigger: number) => {
         const data: {
             [key: string]: {
                 sigId: string[];
@@ -128,7 +128,7 @@ export const SnrChart = () => {
         });
 
         return { labels: sortedKeys, datasets };
-    }
+    };
 
     return <Bar options={options} data={getDataSet(ubxRxmRawxCount.value)} />;
 };

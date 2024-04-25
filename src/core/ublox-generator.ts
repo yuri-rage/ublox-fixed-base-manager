@@ -1,21 +1,21 @@
 import { getUbxChecksum } from './ublox-parser';
 import { UBX } from './ublox-interface';
 
-function packUint32(num: number) {
+const packUint32 = (num: number) => {
     const buffer = new ArrayBuffer(4); // Assuming 4 bytes for a 32-bit integer
     const view = new DataView(buffer);
     view.setUint32(0, num, true); // Set the unsigned integer value
     return new Uint8Array(buffer);
-}
+};
 
-function packInt32(num: number) {
+const packInt32 = (num: number) => {
     const buffer = new ArrayBuffer(4); // Assuming 4 bytes for a 32-bit integer
     const view = new DataView(buffer);
     view.setInt32(0, num, true); // Set the integer value
     return new Uint8Array(buffer);
-}
+};
 
-export function generateMessage(msgClass: number, msgId: number, payload: any[] | ArrayLike<number>) {
+export const generateMessage = (msgClass: number, msgId: number, payload: any[] | ArrayLike<number>) => {
     const data = new Uint8Array(2 + 2 + 2 + payload.length + 2);
     data[0] = 0xb5;
     data[1] = 0x62;
@@ -32,7 +32,7 @@ export function generateMessage(msgClass: number, msgId: number, payload: any[] 
     data[data.length - 1] = checksum[1];
 
     return data;
-}
+};
 
 export class uBloxGenerator {
     public resetToDefaults() {
@@ -108,11 +108,44 @@ export class uBloxGenerator {
 
     // send ubx-cfg-nav5 message to set stationary mode
     public configNavStationary(dgnssEnable = true) {
-        const flag = dgnssEnable ? 0x3c : 0x00;  // 0x3c = 60s, 0x00 = 0s
+        const flag = dgnssEnable ? 0x3c : 0x00; // 0x3c = 60s, 0x00 = 0s
         const payload = new Uint8Array([
-            0xff, 0xff, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x10, 0x27, 0x00, 0x00, 0x0f, 0x00, 0xfa, 0x00,
-            0xfa, 0x00, 0x64, 0x00, 0x2c, 0x01, 0x00, flag, 0x00, 0x23, 0x10, 0x27, 0x00, 0x00, 0x00, 0x00,
-            0x00, 0x00, 0x00, 0x00,
+            0xff,
+            0xff,
+            0x02,
+            0x03,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x10,
+            0x27,
+            0x00,
+            0x00,
+            0x0f,
+            0x00,
+            0xfa,
+            0x00,
+            0xfa,
+            0x00,
+            0x64,
+            0x00,
+            0x2c,
+            0x01,
+            0x00,
+            flag,
+            0x00,
+            0x23,
+            0x10,
+            0x27,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
         ]);
 
         // ! this is the original message used by Mission Planner

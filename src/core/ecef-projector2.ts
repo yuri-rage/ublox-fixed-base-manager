@@ -21,16 +21,16 @@ enum wgs84 {
 /*
  * Converts an angle in radians to degrees.
  */
-function degrees(angle: number) {
+const degrees = (angle: number) => {
     return angle * (180 / Math.PI);
-}
+};
 
 /*
  * Converts an angle in degrees to radians.
  */
-function radians(angle: number) {
+const radians = (angle: number) => {
     return angle * (Math.PI / 180);
-}
+};
 
 /*
  * Some constants we'll want to have on hand
@@ -47,23 +47,23 @@ var eprime = Math.sqrt((asqr - bsqr) / bsqr);
 /*
  * Convert GPS coordinates (degrees) to Cartesian coordinates (meters)
  */
-export function project(latitude: number, longitude: number, altitude: any) {
+export const project = (latitude: number, longitude: number, altitude: any) => {
     return LLAToECEF(radians(latitude), radians(longitude), altitude);
-}
+};
 
 /*
  * Convert Cartesian coordinates (meters) to GPS coordinates (degrees)
  */
-export function unproject(x: any, y: any, z: any) {
+export const unproject = (x: any, y: any, z: any) => {
     var gps = ECEFToLLA(x, y, z);
 
     gps[0] = degrees(gps[0]);
     gps[1] = degrees(gps[1]);
 
     return gps;
-}
+};
 
-function LLAToECEF(latitude: number, longitude: number, altitude: number) {
+const LLAToECEF = (latitude: number, longitude: number, altitude: number) => {
     //Auxiliary values first
     var N = getN(latitude);
     var ratio = bsqr / asqr;
@@ -76,9 +76,9 @@ function LLAToECEF(latitude: number, longitude: number, altitude: number) {
     var Z = (ratio * N + altitude) * Math.sin(latitude);
 
     return [X, Y, Z];
-}
+};
 
-function ECEFToLLA(X: number, Y: number, Z: number) {
+const ECEFToLLA = (X: number, Y: number, Z: number) => {
     //Auxiliary values first
     var p = Math.sqrt(X * X + Y * Y);
     var theta = Math.atan((Z * a) / (p * b));
@@ -104,11 +104,11 @@ function ECEFToLLA(X: number, Y: number, Z: number) {
     }
 
     return [latitude, longitude, altitude];
-}
+};
 
-function getN(latitude: number) {
+const getN = (latitude: number) => {
     var sinlatitude = Math.sin(latitude);
     var denom = Math.sqrt(1 - e * e * sinlatitude * sinlatitude);
     var N = a / denom;
     return N;
-}
+};

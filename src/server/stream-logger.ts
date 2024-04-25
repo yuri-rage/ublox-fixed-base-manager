@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 
-async function createTimestampedFile(directory = '.', prefix = 'data', extension='bin') {
+const createTimestampedFile = async (directory = '.', prefix = 'data', extension = 'bin') => {
     const date = new Date();
     const dateString = date.toISOString();
     const datePart = dateString.slice(0, 10).replace(/-/g, '');
@@ -27,13 +27,13 @@ async function createTimestampedFile(directory = '.', prefix = 'data', extension
         console.error('Failed to create log file:', error);
         throw error;
     }
-}
+};
 
 export class StreamLogger {
     private _filePath: string | null = null;
     private _startTime: Date | null = null;
 
-    public async open(directory: string, prefix: string, extension='bin') {
+    public async open(directory: string, prefix: string, extension = 'bin') {
         try {
             this._filePath = await createTimestampedFile(directory, prefix, extension);
         } catch (error) {

@@ -51,7 +51,7 @@ export class RenogyLog extends eventemitter3 {
         const DD = dt.getDate().toString().padStart(2, '0');
         const hh = dt.getHours().toString().padStart(2, '0');
         const mm = dt.getMinutes().toString().padStart(2, '0');
-        return `${YYYY}${MM}${DD} ${hh}:${mm}`;
+        return `${YYYY}-${MM}-${DD} ${hh}:${mm}`;
     }
 
     private _prune(thresholdDate: Date): void {

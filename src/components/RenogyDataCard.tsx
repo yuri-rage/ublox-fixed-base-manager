@@ -10,6 +10,7 @@ import { SimpleAlertDialog } from '@/components/ui/SimpleAlertDialog';
 import { StyledButton } from '@/components/ui/StyledButton';
 import { TooltipContainer } from '@/components/ui/TooltipContainer';
 import { RenogyChart } from './RenogyChart';
+import { ConfirmButton } from './ui/ConfirmButton';
 
 export const RenogyDataCard = () => {
     const dialogOpen = useSignal(false);
@@ -85,6 +86,16 @@ export const RenogyDataCard = () => {
                     </CardDescription>
                 </CardHeader>
                 <StyledButton onClick={() => renogy.printAllData()}>Print to console</StyledButton>
+                <ConfirmButton
+                    onClick={() => socket.emit('renogyClearHistory')}
+                    alertTitle="Clear device history?"
+                    alertDescription={`
+                        This will clear the Renogy device's long term data history (undervoltage total, total  
+                        energy generated/consumed, etc). To clear chart values, restart the fixed base service.
+                    `}
+                >
+                    Clear History
+                </ConfirmButton>
             </div>
             <CardContent className="p-3">
                 <div className="flex flex-row gap-3">

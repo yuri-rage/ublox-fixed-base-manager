@@ -246,6 +246,14 @@ effect(() => {
         renogyLog.value = data;
     };
 
+    const onRenogyHistoryCleared = (success: boolean) => {
+        if (success) {
+            toast.success('Renogy device history cleared');
+            return;
+        }
+        toast.error('Failed to clear Renogy device history');
+    };
+
     socket.on('startTime', onStartTime);
     socket.on('data', onData);
     socket.on('config', updateConfig);
@@ -261,6 +269,7 @@ effect(() => {
     socket.on('renogyInfo', onRenogyInfo);
     socket.on('renogyParams', onRenogyParams);
     socket.on('renogyLog', onRenogyLog);
+    socket.on('renogyHistoryCleared', onRenogyHistoryCleared);
     ubx.on('write', handleWrite);
     ubx.ubxParser.on('update', onUbxUpdate);
     ubx.rtcm3Parser.on('update', onRtcm3Update);

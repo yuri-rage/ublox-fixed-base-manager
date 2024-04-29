@@ -302,6 +302,10 @@ io.on('connect', (socket) => {
         renogyLog.emitUpdate();
     };
 
+    const handleRenogyClearHistory = () => {
+        renogy.clearHistory();
+    };
+
     socket.on('getConfig', getConfig);
     socket.on('getPorts', getPorts);
     socket.on('config', updateConfig);
@@ -310,6 +314,7 @@ io.on('connect', (socket) => {
     socket.on('reboot', handleReboot);
     socket.on('getStartTime', handleGetStartTime);
     socket.on('renogySetBattType', handleSetBattType);
+    socket.on('renogyClearHistory', handleRenogyClearHistory);
     socket.on('getRenogyLog', handleGetRenogyLog);
     socket.on('disconnect', () => {
         connectedSockets.delete(socket.id);
@@ -364,6 +369,10 @@ renogy.on('params', (raw) => {
 
 renogy.on('battType', (battType) => {
     io.emit('renogyBattType', battType);
+});
+
+renogy.on('historyCleared', (success) => {
+    io.emit('renogyHistoryCleared', success);
 });
 
 if (configObject.renogySolar.enable) {

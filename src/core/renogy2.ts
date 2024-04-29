@@ -4,6 +4,7 @@
  * Yuri - 2024
  */
 
+import fs from 'fs';
 import eventemitter3 from 'eventemitter3';
 import ModbusRTU from 'modbus-serial';
 import {
@@ -21,6 +22,7 @@ export class Renogy extends eventemitter3 {
     private _modbusClient: ModbusRTU;
     private _data: RenogyData;
     private _intervalTimeout: NodeJS.Timeout | null = null;
+    private _port: string = '';
 
     constructor() {
         super();
@@ -49,6 +51,7 @@ export class Renogy extends eventemitter3 {
 
             this._modbusClient.setTimeout(500);
             await this._modbusClient.connectRTUBuffered(serialPort, { baudRate: baudRate });
+            this._port = serialPort;
             this.emit('connected');
         } catch (e) {
             console.log(`Renogy device failed to connect to ${serialPort}`);
@@ -125,6 +128,39 @@ export class Renogy extends eventemitter3 {
             .catch((_error) => {
                 this.emit('battType', null);
             });
+    }
+
+    public clearHistory() {
+        // force port open for history clear using fs, since ModBusRTU does not support raw writes
+        if (!this._port) {
+            this.emit('historyCleared', false);
+            return;
+        }
+
+        let fd;
+        try {
+            fd = fs.openSync(this._port, 'w');
+        } catch (error) {
+            console.error('Renogy: failed to open port for clearing history');
+            this.emit('historyCleared', false);
+            return;
+        }
+
+        const data = Buffer.from([0x01, 0x79, 0x00, 0x00, 0x00, 0x01, 0x5d, 0xc0]);
+        fs.write(fd, data, 0, data.length, null, (err) => {
+            if (err) {
+                console.error('Renogy: failed to clear device history', err);
+                this.emit('historyCleared', false);
+            } else {
+                this.emit('historyCleared', true);
+            }
+
+            fs.close(fd, (err) => {
+                if (err) {
+                    console.error('Renogy: failed to close port after clearing history');
+                }
+            });
+        });
     }
 
     public close(): Promise<void> {

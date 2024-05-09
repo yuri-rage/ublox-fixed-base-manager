@@ -13,7 +13,7 @@ log_dir="$project_root/logs"
 service_template="fixedbase.service.template"
 version="v$(grep '"version":' $project_root/package.json | head -1 | awk -F '"' '{print $4}')"
 
-echo -e "\nBuilding release for $version..."
+echo -e "\nBuilding release $version..."
 
 if [ ! -d "$release_dir" ]; then
     echo -e "\nCreating release directory: $release_dir"
@@ -28,7 +28,9 @@ if [ -d "$log_dir" ]; then
     rm -rf "$log_dir"/*
 fi
 
-if npm run build; then
+echo -e "\nStarting Vite for client build...\n"
+
+if npx tsc && npx vite build; then
     echo -e "\nBuild successful. Copying files to release directory...\n"
     cp -rv "$dist_dir" "$release_dir"
 else

@@ -17,7 +17,7 @@ export const BAUD_RATES = [4800, 9600, 19200, 38400, 57600, 115200, 230400, 4608
 export const MIN_SVIN_TIME = 60; // default to 1 min svin time
 
 // u-Blox GPS handling
-export const socket = io(`${originRoot}:3001`);
+export const socket = io(`${originRoot}:8080`);
 export const ubx = new uBloxGps();
 export const renogy = new RenogyData();
 export const renogyLog = signal<RenogyLogData | null>(null);
@@ -54,8 +54,6 @@ export const systemStartTime: Signal<ServiceStartTimes> = signal({
 
 export const appConfig = signal({
     serial: { device: '', baud: 0 },
-    webserver: { port: 0 },
-    websocket: { port: 0 },
     ntrip: { enable: false, host: '', port: 0, mountpoint: '', password: '' },
     tcpRepeater: { enable: false, port: 0 },
     savedLocation: { ecefXOrLat: 0, ecefYOrLon: 0, ecefZOrAlt: 0, fixedPosAcc: 0 },

@@ -28,7 +28,7 @@ if [ -d "$log_dir" ]; then
     rm -rf "$log_dir"/*
 fi
 
-echo -e "\nStarting Vite for client build...\n"
+echo -e "\nBuilding client with Vite...\n"
 
 if npx tsc && npx vite build; then
     echo -e "\nBuild successful. Copying files to release directory...\n"

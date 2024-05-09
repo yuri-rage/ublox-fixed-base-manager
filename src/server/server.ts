@@ -5,6 +5,7 @@ import config from 'config';
 import fs from 'fs';
 import express from 'express';
 import http from 'http';
+import path from 'path';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import { Renogy } from '@/core/renogy2';
@@ -20,6 +21,7 @@ const osBootTime = new Date(serverStartTime.getTime() - os.uptime() * 1000);
 
 console.log(`\nFixed Base Server v${version}\n`);
 
+const PORT = 8080;
 const LOG_DIR = './logs';
 const LOG_IN_PREFIX = 'EXTERN-IN';
 const LOG_RTCM3_OUT_PREFIX = 'RTCM3-OUT';
@@ -28,7 +30,7 @@ const LOG_UBX_OUT_EXTENSION = 'ubx';
 const NTRIP_BOOT_DELAY = 10000; // 10 seconds to allow network services to start
 
 export const app = express();
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
 
 const eth0Interface = os.networkInterfaces().eth0;
 const wlan0Interface = os.networkInterfaces().wlan0;
@@ -47,9 +49,9 @@ const ubxOutLog = new StreamLogger();
 const renogy = new Renogy();
 const renogyLog = new RenogyLog();
 
-const io = new Server(server, {
+const io = new Server(httpServer, {
     cors: {
-        origin: (origin, callback)=> {
+        origin: (origin, callback) => {
             if (origin) {
                 const ip = origin.split('//')[1];
                 if (
@@ -62,7 +64,9 @@ const io = new Server(server, {
                     callback(new Error('Not allowed by CORS'));
                 }
             } else {
-                callback(new Error('Origin is undefined'));
+                // callback(new Error('Origin is undefined'));
+                // allow undefined origins for websocket connections
+                callback(null, true);
             }
         },
         methods: ['GET', 'POST'],
@@ -385,10 +389,6 @@ if (configObject.logging.enable) {
     fs.writeFileSync('config/default.json', JSON.stringify(configObject, null, 2));
 }
 
-server.listen(configObject.websocket.port, () => {
-    console.log(`Websocket server started on     *:${configObject.websocket.port}`);
-});
-
 // handle SIGINT (Ctrl+C)
 process.on('SIGINT', async () => {
     console.log('\nSIGINT (Ctrl-C), shutting down...');
@@ -400,7 +400,7 @@ process.on('SIGINT', async () => {
                 else resolve();
             });
         });
-        console.log('Socket.io (websocket) closed');
+        console.log('Socket.io (websocket server) closed');
         ntrip.close();
         await tcpRepeater.close();
         await ubxSerial.close();
@@ -413,12 +413,14 @@ process.on('SIGINT', async () => {
     }
 });
 
+httpServer.listen(PORT, () => {
+    console.log(`Web server listening on         *:${PORT}`);
+});
+
 if (!process.env['VITE']) {
-    const frontendFiles = process.cwd() + '/dist';
+    const frontendFiles = path.join(process.cwd(), 'dist');
     app.use(express.static(frontendFiles));
     app.get('/*', (_, res) => {
-        res.send(frontendFiles + '/index.html');
+        res.sendFile(path.join(frontendFiles, 'index.html'));
     });
-    app.listen(configObject.webserver.port);
-    console.log(`Express web server started on   *:${configObject.webserver.port}`);
 }

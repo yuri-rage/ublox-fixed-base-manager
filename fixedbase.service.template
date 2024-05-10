@@ -2,7 +2,7 @@
 Description=Fixed Base Service {{VERSION}}
 
 [Service]
-ExecStart=/usr/bin/node /home/{{USERNAME}}/fixedbase/server.cjs
+ExecStart=/usr/bin/authbind --deep /usr/bin/node /home/{{USERNAME}}/fixedbase/server.cjs
 WorkingDirectory=/home/{{USERNAME}}/fixedbase
 Restart=on-failure
 

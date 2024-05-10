@@ -21,7 +21,7 @@ const osBootTime = new Date(serverStartTime.getTime() - os.uptime() * 1000);
 
 console.log(`\nFixed Base Server v${version}\n`);
 
-const PORT = 8080;
+const PORT = !process.env['VITE'] ? 80 : 8080;
 const LOG_DIR = './logs';
 const LOG_IN_PREFIX = 'EXTERN-IN';
 const LOG_RTCM3_OUT_PREFIX = 'RTCM3-OUT';

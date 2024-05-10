@@ -39,7 +39,12 @@ if $is_initial_install; then
 
     # reference: https://deb.nodesource.com/
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&\
-    sudo apt install -y nodejs
+    sudo apt install -y nodejs authbind
+
+    echo -e  "\nConfiguring authbind for $user to access port 80 (http)..."
+    sudo touch /etc/authbind/byport/80
+    sudo chown $user:$user /etc/authbind/byport/80
+    sudo chmod 755 /etc/authbind/byport/80
 fi
 
 echo -e "\nDownloading from GitHub...\n"
@@ -104,4 +109,4 @@ echo -e "\n$version installation complete!\n"
 echo -e "To monitor server side messages, run:"
 echo -e "journalctl -f --user-unit $service\n"
 
-echo -e "Access the web app at http://$ip_address:8080\n"
+echo -e "Access the web app at http://$ip_address\n"

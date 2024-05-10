@@ -13,7 +13,7 @@ log_dir="$project_root/logs"
 service_template="fixedbase.service.template"
 version="v$(grep '"version":' $project_root/package.json | head -1 | awk -F '"' '{print $4}')"
 
-echo -e "\nBuilding release $version..."
+echo -e "Building release $version..."
 
 if [ ! -d "$release_dir" ]; then
     echo -e "\nCreating release directory: $release_dir"

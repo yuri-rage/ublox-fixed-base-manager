@@ -8,16 +8,15 @@ import { BATT_TYPE, RenogyData } from '@/core/renogy-data';
 import { RenogyLogData } from '@/core/renogy-log';
 import { toast } from 'sonner';
 
-const originRoot = window.location.origin.split(':').slice(0, 2).join(':');
-
 const NMEA_MSG_HISTORY = 100;
 
 export const BAUD_RATES = [4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600];
 
 export const MIN_SVIN_TIME = 60; // default to 1 min svin time
 
-// u-Blox GPS handling
-export const socket = io(`${originRoot}:8080`);
+// port 5173 is used during development (socket.io requires a separate port in that environment)
+export const socket = io(window.location.origin.replace(':5173', ':8080'));
+
 export const ubx = new uBloxGps();
 export const renogy = new RenogyData();
 export const renogyLog = signal<RenogyLogData | null>(null);

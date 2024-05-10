@@ -6,8 +6,7 @@
     "scripts": {
         "dev": "vite --host",
         "build": "./build_release.sh",
-        "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-        "preview": "vite preview"
+        "start": "authbind --deep node ./release/server.cjs"
     },
     "dependencies": {
         "@fortawesome/fontawesome-svg-core": "^6.5.2",

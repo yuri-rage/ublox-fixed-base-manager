@@ -38,7 +38,7 @@ if $is_initial_install; then
     echo -e  "\nInstalling Node.js...\n"
 
     # reference: https://deb.nodesource.com/
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - &&\
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash - &&\
     sudo apt install -y nodejs authbind
 
     echo -e  "\nConfiguring authbind for $user to access port 80 (http)..."

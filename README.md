@@ -1,8 +1,9 @@
+# DEPRECATION NOTICE
+
+**NOTE**: This project is deprecated and no longer maintained. For similar features and functionality, consider using [Dock of the Base](https://github.com/yuri-rage/dock-of-the-base).
+
 # Fixed Base Manager
 Manage a u-Blox GPS fixed base (RTK/RTCM3) installation with Raspberry Pi
-
-### DISCLAIMER
-This is very much a work in progress. The current (and only) release is an early alpha version and likely unstable.
 
 ---
 Provides a Raspberry Pi served web app to ease the pain involved with configuring and maintaining a u-Blox GPS Fixed Base (RTK/RTCM3) installation. Optionally enables a local TCP connection to the GPS module and an NTRIP transport service to stream data to an internet based NTRIP caster.
